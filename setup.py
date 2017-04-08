@@ -2,7 +2,7 @@ from setuptools import setup
 
 setup(name='cellfate',
       version='0.1',
-      description='Fitting parameters of the model for density \
+      description='Fitting parameters of the model for density\
                   of human embryonic stem cells in processed images at different \
                   time t to differentiate the fates of the cells',
       url='https://github.com/p201-sp2016/cellfate',
