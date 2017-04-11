@@ -16,6 +16,6 @@ GNU General Public License v3
 
 ## Authors:
 
-Tessa Green
-Yau Chuen (Oliver) Yam
-Seung Hwan Lee
+- Tessa Green
+- Yau Chuen (Oliver) Yam
+- Seung Hwan Lee
