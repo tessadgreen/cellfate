@@ -1,5 +1,7 @@
 import numpy as np
 from numpy import random
+import pandas as pd 
+import cellfate
 
 """
 	The function gen_data can be used to generate fake processed 
@@ -100,7 +102,7 @@ def gen_data(k, N_bins,T_steps,sigma):
 	#increment using diffeq plus noise terms
 
 	#generate random nuclei locations in bins 
-
+	#processed_data=pd.DataFrame({'n_b': n_b, 'n_r': n_r, 'n_g': n_g, })
 
 	return n_b,n_r,n_g
 
@@ -113,8 +115,14 @@ sigma=(.02,.05) #(sigma_obs, sigma_cells)
 #sprint(sum_neighbors(np.array(np.ones((5,8)))))
 (alpha,beta,gamma)=gen_data(k, N_bins, T_steps,sigma)
 
+	
+thing=DataSet(4,5)
+
+#data=pd.DataFrame('x'=[]
+#	'y'=
+#	't')
 #print(alpha[:,:,T_steps-1])
 #print(beta[:,:,T_steps-1])
-
+#DataSet
 
 #print(np.shape(np.zeros((5,2))))
