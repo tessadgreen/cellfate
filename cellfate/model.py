@@ -71,18 +71,18 @@ def plotMap(grid, duration, plotNum=10):
     '''
     # Define time step
     time_step = int(duration/plotNum)
-    # Plot heatmap for each time i
+    # Plot heatmap for each time i*time_step
     for i in range(plotNum):
         plt.subplot(plotNum,3,1+i*3)
-        ax = sns.heatmap(grid[:,:,0,i*time_step], vmin=0, vmax=30, 
-                         annot=True, fmt='.1f', cmap="Blues")
+        sns.heatmap(grid[:,:,0,i*time_step], vmin=0, vmax=30, 
+                         annot=True, fmt='.1f', cmap="Oranges")
         
         plt.subplot(plotNum,3,2+i*3)
-        ax = sns.heatmap(grid[:,:,1,i*time_step], vmin=0, vmax=30, 
+        sns.heatmap(grid[:,:,1,i*time_step], vmin=0, vmax=30, 
                          annot=True, fmt='.1f', cmap="Reds")
     
         plt.subplot(plotNum,3,3+i*3)
-        ax = sns.heatmap(grid[:,:,2,i*time_step], vmin=0, vmax=30, 
+        sns.heatmap(grid[:,:,2,i*time_step], vmin=0, vmax=30, 
                          annot=True, fmt='.1f', cmap="Greens")
 
 
@@ -98,7 +98,7 @@ for i in range(binNum):
         r = final_grid[i,j,1,:]
         g = final_grid[i,j,2,:]
         
-        plt.plot(t, b, 'b', linewidth=lw)
+        plt.plot(t, b, 'orange', linewidth=lw)
         plt.plot(t, g, 'g', linewidth=lw)
         plt.plot(t, r, 'r', linewidth=lw)
 
