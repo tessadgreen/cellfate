@@ -1,29 +1,41 @@
+import os
+import numpy as np
+import scipy.io as sio
 
-'''data comes in as a matlab cell array
-	you can open this in Matlab and view data using the cell2mat command
+def get_data_file_path(filename, data_dir='data'):
 
+    start = os.path.abspath(__file__)
+    start_dir = os.path.dirname(start)
 
-Attributes:
-	Number_Object_Number
-	Location_Center_X
-	Location_Center_Y
+    data_dir = os.path.join(start_dir, data_dir)
+    return os.path.join(start_dir, data_dir, filename)
 
-handles.Measurements.OctNuclei.Number_Object_Number
-handles.Measurements.SoxNuclei.Number_Object_Number
-or similar
+def read(data_file, CellWidth, BinDiv):
+    return CellLoc(data_file, CellWidth, BinDiv)
 
-
-In this file we will:
-1) import the matlab file so that python can access its contents
-
-2) Use locations to identify cells that are "both"
-		-probably set up some "nearness threshold" where when centers
-		are sufficiently close, we class those as a 'both' cell
-
-3) Divide the images into analysis bins, 
-	calculating the n_b, n_g, n_r for each bin at each time
-
-4) Put this data into an instance of our class:
-	a pd.DataFrame with categories for time, n_b, n_r, n_g, bin
-
-'''
+class CellLoc:
+    """
+    data_file: the path to the .mat metadata file of two cell types,
+        which conatins index of
+        'CelltypeWidth', containing the legnth of the original cell image, 
+            e.g. 'OctWidth' or 'SoxWidth'
+        'CelltypeX', containing the x-coor of locations of the cell type, 
+            e.g. 'OctX' or 'SoxX'
+        'CelltypeY', containing the y-coor of locations of the cell type, 
+            e.g. 'OctY' or 'SoxY'
+        for both the first and second cell types.
+    
+    CellWidth: the width of the cell, in unit of pixels, suggested value=5
+    
+    BinDiv: the original cell image will be divided into BinDiv x BinDiv bins,
+        in which the cell density would be intended to be calulated
+        
+    """
+    
+    def __init__(self, data_file, CellWidth, BinDiv):
+        self.data_file = data_file
+        self.CellWidth = CellWidth
+        self.BinDiv = BinDiv
+        
+        all_data =  sio.loadmat(data_file)
+        self.data = all_data #store in a dictionary for convenience 
