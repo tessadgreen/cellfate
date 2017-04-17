@@ -17,24 +17,26 @@ class Test(TestCase):
     def test_diffeq_solver(self):
         nbins=6
         testdat=io.read('test-data','R','G', 5,nbins)
-        test_params = [0, # k_ent
-               0.05, # k_div
-               0, # k_dep
-               0.6, # k_bg
-               0.1, # k_br
-               0 # k_loss
-               ]
+        test_params=[0.05, 0.6, 0.1]
+        #test_params = [0, # k_ent
+        #       0.05, # k_div
+        #       0, # k_dep
+        #       0.6, # k_bg
+        #       0.1, # k_br
+        #       0 # k_loss
+        #       ]
         testdat_solved = model.diffeqSolve(test_params, testdat)
         assert np.shape(testdat_solved)==(3,nbins,nbins,1)
     
     def test_model(self):
-        test_params = [0, # k_ent
-            0.03, # k_div
-            0, # k_dep
-            0.1, # k_bg
-            0.7, # k_br
-            0 # k_loss
-               ]
+        #test_params = [0, # k_ent
+        #    0.03, # k_div
+        #    0, # k_dep
+        #    0.1, # k_bg
+        #    0.7, # k_br
+        #    0 # k_loss
+        #       ]
+        test_params=[0.03,0.1,0.7]
         nbins=4
         testdat=io.read('test-data','R','G', 5,nbins)
         sigma_n=0.2
