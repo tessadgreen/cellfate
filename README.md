@@ -16,7 +16,7 @@ Fitting parameters of the model for density of human embryonic stem cells in pro
     'CelltypeWidth', containing the legnth of the original cell image, (e.g. 'OctWidth' or 'SoxWidth')
     'CelltypeX', containing the x-coor of locations of the cell type, (e.g. 'OctX' or 'SoxX')
     'CelltypeY', containing the y-coor of locations of the cell type, (e.g. 'OctY' or 'SoxY')
-  for both the first and second cell types and it will output an object descibed above in 'cell_density_object.py'.
+  for both the first and second cell types and it will output an object containing the data of cell density descibed above in 'cell_density_object.py'.
 
 - model.py: contains the functions to solve ODE for our model and to calculate likelihood function
 
