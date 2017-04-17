@@ -196,10 +196,11 @@ def plotMap(grid, duration, plotNum=10):
 
 #testdat = io.read('test-data.mat', 'R', 'G', 5, 2)
 #testdat_grid = np.reshape(testdat.data.as_matrix(), (3,testdat.bin_num,testdat.bin_num))
-#testdat_solved = diffeqSolve(test_params, testdat_grid)
+#testdat_solved = diffeqSolve(test_params, testdat)
 #params = [0, 0.1, 0, 0.6, 0.2, 0]
 #
 #
+#print(np.shape(testdat_solved))
 #cols=pd.MultiIndex.from_tuples([ (x,y) for x in ['R','G','Both'] for y in np.arange(2*2)])
 #reshaped = np.reshape(testdat_solved, (12, -1))
 #df = pd.DataFrame(reshaped.T,columns=cols)
