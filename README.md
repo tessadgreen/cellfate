@@ -14,6 +14,8 @@ Fitting parameters of the model for density of human embryonic stem cells in pro
   
 - cell_density_in_bins.py: contains the function to calculate densities of different types of cells in different bins at different times.
 
+- model.py: contains the functions to solve ODE for our model and to calculate likelihood function
+
 ## License:
 
 GNU General Public License v3
