@@ -4,7 +4,7 @@ import scipy.io as sio
 import cell_density_fun
 import cell_density_object
 
-def get_data_file_path(filename, data_dir='data'):
+def get_data_file_path(filename, data_dir='test'):
 
     start = os.path.abspath('__file__')
     start_dir = os.path.dirname(start)
