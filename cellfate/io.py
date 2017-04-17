@@ -33,7 +33,7 @@ def read(data_name, CelltypeA, CelltypeB, CellWidth, BinDiv):
         
     Return:
     -----------
-    A class object containing:
+    A class object containing
     data: the density of different types of cells in different bins in a dataframe
     cellwidth: the length of the nucleus
     bin_num: total numbers of bins
