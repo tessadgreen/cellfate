@@ -1,6 +1,4 @@
-import os
 import numpy as np
-import scipy.io as sio
 
 class CellDen:
     """
@@ -16,5 +14,5 @@ class CellDen:
         
         tot_time,bin_num_tmp=np.shape(data)
         bin_num=np.sqrt(bin_num_tmp/3)
-        self.bin_num = bin_num
+        self.bin_num = int(bin_num)
         self.tot_time = tot_time
