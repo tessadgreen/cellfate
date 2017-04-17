@@ -18,8 +18,7 @@ def loc_both(AX,AY,BX,BY,CellWidth):
     def min_dist(x1,y1):
         
         #consdier only 'close' points to save computational time
-        prelim_select_close_pt=(((np.abs(BX-x1)<(CellWidth))*\
-        (np.abs(BY-y1)<(CellWidth)))==1) 
+        prelim_select_close_pt=(((np.abs(BX-x1)<(CellWidth))*(np.abs(BY-y1)<(CellWidth)))==1) 
         
         if np.sum(prelim_select_close_pt)>0 : #if there is at least one 'close' point
             concern_BX=BX[prelim_select_close_pt]
@@ -62,7 +61,9 @@ def bins_density(LocX,LocY,BinDiv,ImgWidth):
     all_bin_density=np.vectorize(one_bin_density,otypes=[np.ndarray])
     
     bin_j,bin_i=np.meshgrid(np.arange(BinDiv),np.arange(BinDiv))
-    return all_bin_density(bin_i,bin_j)
+    return np.array(list(zip(*all_bin_density(bin_i,bin_j)))[::-1])
+
+#Find the density of different types of cells at different times and bins
 
 #Find the density of different types of cells at different times and bins
 
@@ -111,7 +112,7 @@ def cell_density(CelltypeA,CelltypeB,data,CellWidth,BinDiv):
     LocAY_all=data[CelltypeA+'Y'][0]
     
     tot_time=np.size(LocAX_all)
-    ImgWidth=WidthA_all
+    ImgWidth=WidthA_all[0].flatten()[0]
     
     #for CelltypeB
     WidthB_all=data[CelltypeB+'Width'][0]
@@ -139,11 +140,10 @@ def cell_density(CelltypeA,CelltypeB,data,CellWidth,BinDiv):
     density_A=np.zeros((tot_time,BinDiv*BinDiv))
     density_B=np.zeros((tot_time,BinDiv*BinDiv))
     density_Both=np.zeros((tot_time,BinDiv*BinDiv))
-
     for t in range(tot_time): 
-        density_A[t,:]=tmp_density[t][0]
-        density_B[t,:]=tmp_density[t][1]
-        density_Both[t,:]=tmp_density[t][2]
+        density_A[t,:]=tmp_density[t][0].flatten()
+        density_B[t,:]=tmp_density[t][1].flatten()
+        density_Both[t,:]=tmp_density[t][2].flatten()
 
     cols=pd.MultiIndex.from_tuples([ (x,y) \
     for x in [CelltypeA,CelltypeB,'Both'] for y in np.arange(BinDiv*BinDiv)])
