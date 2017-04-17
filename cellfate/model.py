@@ -6,7 +6,7 @@ import seaborn as sns
 import matplotlib.pyplot as plt
 from scipy.integrate import odeint
 import pandas as pd
-import cell_density_object as cdo
+from cellfate import io, cell_density_object as cdo
 
 test_params = [0, # k_ent
                0.05, # k_div
@@ -194,7 +194,7 @@ def plotMap(grid, duration, plotNum=10):
 # You can ignore them                 #
 #######################################
 
-#testdat = io.read('test/test-data.mat', 'R', 'G', 5, 2)
+#testdat = io.read('test-data.mat', 'R', 'G', 5, 2)
 #testdat_grid = np.reshape(testdat.data.as_matrix(), (3,testdat.bin_num,testdat.bin_num))
 #testdat_solved = diffeqSolve(test_params, testdat_grid)
 #params = [0, 0.1, 0, 0.6, 0.2, 0]
@@ -206,16 +206,16 @@ def plotMap(grid, duration, plotNum=10):
 #df.to_pickle('sample.pkl')
 #print(np.size(testdat_grid))
 
-testobject = cdo.CellDen(pd.read_pickle('sample.pkl'), 5)
-lpos = log_posterior(test_params, testobject, 1)
-print(lpos)
+#testobject = cdo.CellDen(pd.read_pickle('sample.pkl'), 5)
+#lpos = log_posterior(test_params, testobject, 1)
+#print(lpos)
 
 #tt = diffeqSolve(test_params, testobject)
 #print(np2pd(tt))
 
 #print(df)
 
-#plotMap(testdat_solved, 250, 3)
+#plotMap(diffeqSolve(test_params, testobject), 250, 3)
 
 
 #plt.figure()
