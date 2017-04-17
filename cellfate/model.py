@@ -7,6 +7,7 @@ import matplotlib.pyplot as plt
 from scipy.integrate import odeint
 import pandas as pd
 import cell_density_object as cdo
+from cellfate import io
 
 test_params = [0, # k_ent
                0.05, # k_div
@@ -194,7 +195,7 @@ def plotMap(grid, duration, plotNum=10):
 # You can ignore them                 #
 #######################################
 
-#testdat = io.read('test/test-data.mat', 'R', 'G', 5, 2)
+testdat = io.read('test-data.mat', 'R', 'G', 5, 2)
 #testdat_grid = np.reshape(testdat.data.as_matrix(), (3,testdat.bin_num,testdat.bin_num))
 #testdat_solved = diffeqSolve(test_params, testdat_grid)
 #params = [0, 0.1, 0, 0.6, 0.2, 0]
@@ -218,7 +219,7 @@ print(lpos)
 #plotMap(testdat_solved, 250, 3)
 
 
-#plt.figure()
+plt.figure()
 ## Plot the number of each cell over time in each bin        
 #for i in range(binNum):
 #    for j in range(binNum):
