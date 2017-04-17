@@ -1,8 +1,8 @@
 import os
 import numpy as np
 import scipy.io as sio
-import cell_density_fun
-import cell_density_object
+from cellfate import cell_density_fun
+from cellfate import cell_density_object
 
 def get_data_file_path(filename, data_dir='test'):
 
