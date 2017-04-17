@@ -7,14 +7,15 @@ import matplotlib.pyplot as plt
 from scipy.integrate import odeint
 import pandas as pd
 from cellfate import io, cell_density_object as cdo
+import emcee
 
-test_params = [0, # k_ent
-               0.05, # k_div
-               0, # k_dep
-               0.6, # k_bg
-               0.1, # k_br
-               0 # k_loss
-               ]
+#test_params = [0, # k_ent
+#               0.05, # k_div
+#               0, # k_dep
+#               0.6, # k_bg
+#               0.1, # k_br
+#               0 # k_loss
+#               ]
 
 def pd2np(input_data):
     '''
@@ -60,12 +61,18 @@ def diffeq(w, t, p):
                   p = [k_ent,k_div,k_dep,k_bg,k_br, k_loss]
     """
     red, grn, both = w
-    k_ent, k_div, k_dep, k_bg, k_br, k_loss = p
+#    k_ent, k_div, k_dep, k_bg, k_br, k_loss = p
+    k_div, k_bg, k_br = p
 
     # Create f = (red,grn,both) - order should be same as in w vector:
-    f = [k_ent*red + (k_div - k_dep)*red + (k_br+k_loss)*both,
-         k_ent*grn + (k_div - k_dep)*grn + (k_bg-k_loss)*both,
-         k_ent*both + (k_div - k_dep)*both - (k_bg+k_br-k_loss)*both]
+#    f = [k_ent*red + (k_div - k_dep)*red + (k_br+k_loss)*both,
+#         k_ent*grn + (k_div - k_dep)*grn + (k_bg-k_loss)*both,
+#         k_ent*both + (k_div - k_dep)*both - (k_bg+k_br-k_loss)*both]
+
+    f = [k_div*red + k_br*both,
+         k_div*grn + k_bg*both,
+         k_div*both - (k_bg+k_br)*both]
+
     return f
 
   
@@ -110,12 +117,14 @@ def log_prior(theta):
         theta: model parameters (specified as a list)
     """
     # unpack the model parameters
-    k_ent, k_div, k_dep, k_bg, k_br, k_loss = theta
+#    k_ent, k_div, k_dep, k_bg, k_br, k_loss = theta
+    k_div, k_bg, k_br = theta
   
     # We can ignore normalization factor since it is constant.
     # So we simply return 0 for parameters in the specified range.
-    if 0 <= k_ent <= 1 and 0 <= k_div <= 1 and 0 <= k_dep <= 1  \
-    and 0 <= k_bg <= 1 and 0 <= k_br <= 1 and 0 <= k_loss <= 1:
+#    if 0 <= k_ent <= 1 and 0 <= k_div <= 1 and 0 <= k_dep <= 1  \
+#    and 0 <= k_bg <= 1 and 0 <= k_br <= 1 and 0 <= k_loss <= 1:
+    if 0 <= k_div <= 1 and 0 <= k_bg <= 1 and 0 <= k_br <= 1:
         return 0.0
     return -np.inf
     
@@ -128,8 +137,6 @@ def log_likelihood(theta, data, sigma_n):
         data: CellDen class object
         sigma_n: uncertainties on measured number density
     """
-    k_ent, k_div, k_dep, k_bg, k_br, k_loss = theta
-    
     model = diffeqSolve(theta, data)
     data_matrix = pd2np(data)
     residual = (data_matrix - model)**2
@@ -184,10 +191,6 @@ def plotMap(grid, duration, plotNum=10):
         plt.subplot(plotNum,3,3+i*3)
         sns.heatmap(grn[:,:,i*time_step], vmin=0, vmax=30, 
                          annot=True, fmt='.1f', cmap="Greens")
-
-
-
-
 
 #######################################
 # Following codes are for test purpose#
