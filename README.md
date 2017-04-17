@@ -12,7 +12,11 @@ Fitting parameters of the model for density of human embryonic stem cells in pro
     'CelltypeY', containing the y-coor of locations of the cell type, (e.g. 'OctY' or 'SoxY')
   for both the first and second cell types.
   
-- cell_density_fun.py: contains the function to calculate densities of different types of cells in different bins at different times.
+- cell_density_fun.py: contains the functions to calculate densities of different types of cells in different bins at different times.
+
+- cell_density_object.py: contains a class to put the follwing items into an object 
+    1) the dataframe of the process cell density data 
+    2) information of the size of a nulcues, num of bins and total time step of the data
 
 - model.py: contains the functions to solve ODE for our model and to calculate likelihood function
 
