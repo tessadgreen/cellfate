@@ -1,7 +1,9 @@
 import os
 import numpy as np
 import scipy.io as sio
+
 from cellfate import cell_density_fun, cell_density_object
+
 
 def get_data_file_path(filename, data_dir='test'):
 
@@ -29,6 +31,15 @@ def read(data_name, CelltypeA, CelltypeB, CellWidth, BinDiv):
     CellWidth: the width of the nucleus, in unit of pixels, suggested value=5
     BinDiv: the original cell image will be divided into BinDiv x BinDiv bins,
         in which the cell density would be intended to be calulated
+        
+    Return:
+    -----------
+    A class object containing
+    data: the density of different types of cells in different bins in a dataframe
+    cellwidth: the length of the nucleus
+    bin_num: total numbers of bins
+    tot_time: total time steps of the data
+    
     '''
     data_path=get_data_file_path(data_name)
     data_raw=sio.loadmat(data_path)
