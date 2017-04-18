@@ -20,6 +20,10 @@ Fitting parameters of the model for density of human embryonic stem cells in pro
 
 - model.py: contains the functions to solve ODE for our model and to calculate likelihood function
 
+- sample.pkl: simulated data (2x2 bins) in the form of pandas dataframe. The parameters used to create this dataset is [k_div, k_bg, k_br]=[0.05, 0.6, 0.1]
+
+- sample_4x4.pkl: simulated data (4x4 bins) in the form of pandas dataframe. The parameters used to create this dataset is [k_div, k_bg, k_br]=[0.1, 0.4, 0.2]
+
 ## License:
 
 GNU General Public License v3
