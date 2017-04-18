@@ -10,8 +10,8 @@ def get_data_file_path(filename, data_dir='test'):
     start_dir = os.path.dirname(start)
     print(start_dir)
 
-    data_dir = os.path.join(start_dir,data_dir)
-    return os.path.join(start_dir,filename)
+    data_dir = os.path.join(start_dir,'cellfate',data_dir)
+    return os.path.join(start_dir,data_dir,filename)
     
 def read(data_name, CelltypeA, CelltypeB, CellWidth, BinDiv):
     '''
