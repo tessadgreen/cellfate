@@ -7,7 +7,6 @@ import matplotlib.pyplot as plt
 from scipy.integrate import odeint
 import pandas as pd
 from cellfate import io, cell_density_object as cdo
-import emcee
 
 #test_params = [0, # k_ent
 #               0.05, # k_div
@@ -30,7 +29,7 @@ def pd2np(input_data):
     binDiv = input_data.bin_num
     return np.reshape(df.as_matrix().T, (3,binDiv, binDiv, -1))
 
-def np2pd(input_np):
+def np2pd(input_np, binNum):
     '''
     Transforms ndarray into pandas dataframe.
     The resulting pandas dataframe will have following form:
@@ -44,8 +43,8 @@ def np2pd(input_np):
     '''
     # Set up the column structure for dataframe
     cols=pd.MultiIndex.from_tuples([ (x,y) for x in ['R','G','Both'] \
-                                    for y in np.arange(2*2)])
-    reshaped = np.reshape(input_np, (12, -1))
+                                    for y in np.arange(binNum*binNum)])
+    reshaped = np.reshape(input_np, (3*binNum**2, -1))
     return pd.DataFrame(reshaped.T,columns=cols)
 
 
@@ -100,7 +99,6 @@ def diffeqSolve(params, data, stoptime=20, minStepNum=200):
     # Create a grid to save the solved results
     binDiv = data.bin_num
     final_grid = np.zeros((3, binDiv , binDiv, data.tot_time))
-    
     # Solve ODE for each bin
     for i in range(binDiv):
         for j in range(binDiv):
@@ -178,19 +176,19 @@ def plotMap(grid, duration, plotNum=10):
     both = grid[2,:,:]
     # Plot heatmap for each time i*time_step
     for i in range(plotNum):
-        print(i*time_step)
-        print(np.shape(both))
+#        print(i*time_step)
+#        print(np.shape(both))
         plt.subplot(plotNum,3,1+i*3)
-        sns.heatmap(both[:,:,i*time_step], vmin=0, vmax=30, 
-                         annot=True, fmt='.1f', cmap="Oranges")
+        sns.heatmap(both[:,:,i*time_step], vmin=0, vmax=30,
+                    annot=True, fmt='.1f', cmap="Oranges")
         
         plt.subplot(plotNum,3,2+i*3)
-        sns.heatmap(red[:,:,i*time_step], vmin=0, vmax=30, 
-                         annot=True, fmt='.1f', cmap="Reds")
+        sns.heatmap(red[:,:,i*time_step], vmin=0, vmax=30,
+                    annot=True, fmt='.1f', cmap="Reds")
     
         plt.subplot(plotNum,3,3+i*3)
-        sns.heatmap(grn[:,:,i*time_step], vmin=0, vmax=30, 
-                         annot=True, fmt='.1f', cmap="Greens")
+        sns.heatmap(grn[:,:,i*time_step], vmin=0, vmax=30,
+                    annot=True, fmt='.1f', cmap="Greens")
 
 #######################################
 # Following codes are for test purpose#
@@ -199,7 +197,6 @@ def plotMap(grid, duration, plotNum=10):
 
 #testdat = io.read('test-data.mat', 'R', 'G', 5, 2)
 #testdat_grid = np.reshape(testdat.data.as_matrix(), (3,testdat.bin_num,testdat.bin_num))
-#testdat_solved = diffeqSolve(test_params, testdat_grid)
 #params = [0, 0.1, 0, 0.6, 0.2, 0]
 #
 #
@@ -218,8 +215,27 @@ def plotMap(grid, duration, plotNum=10):
 
 #print(df)
 
-#plotMap(diffeqSolve(test_params, testobject), 250, 3)
+#test_params = [0.1, # k_div
+#               0.4, # k_bg
+#               0.2, # k_br
+#               ]
+#testdat.tot_time=30
+#testdat_solved = diffeqSolve(test_params, testdat)
+#df = np2pd(testdat_solved, 2)
+#df.to_pickle('sample_2x2_30.pkl')
+#plotMap(testdat_solved, testdat.tot_time, 3)
 
+#testobject = cdo.CellDen(pd.read_pickle('sample_2x2_30.pkl'), 5)
+#import scipy.integrate as integrate
+#def likelihood(z, y, x, data, sigma_n):
+#    return np.exp(log_likelihood([x,y,z], data, sigma_n))
+#
+#a = integrate.tplquad(likelihood, 0, 0.2,
+#                      lambda x: 0.3, lambda x: 0.5,
+#                      lambda x,y: 0.1, lambda x,y: 0.3,
+#                      args=(testobject, 0.4))[0]
+#print(a)
+#
 
 #plt.figure()
 ## Plot the number of each cell over time in each bin        
