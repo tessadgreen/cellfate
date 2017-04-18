@@ -1,5 +1,4 @@
 import os
-import numpy as np
 import scipy.io as sio
 
 from cellfate import cell_density_fun, cell_density_object
@@ -7,8 +6,9 @@ from cellfate import cell_density_fun, cell_density_object
 
 def get_data_file_path(filename, data_dir='test'):
 
-    start = os.path.abspath('__file__')
+    start = os.path.abspath(__file__)
     start_dir = os.path.dirname(start)
+    print(start_dir)
 
     data_dir = os.path.join(start_dir,data_dir)
     return os.path.join(start_dir,filename)
@@ -41,7 +41,7 @@ def read(data_name, CelltypeA, CelltypeB, CellWidth, BinDiv):
     tot_time: total time steps of the data
     
     '''
-    data_path=get_data_file_path(data_name, data_dir='cellfate')
+    data_path=get_data_file_path(data_name)
     data_raw=sio.loadmat(data_path)
     data=cell_density_fun.cell_density(CelltypeA,CelltypeB,data_raw,CellWidth,BinDiv)
     return cell_density_object.CellDen(data, CellWidth)
