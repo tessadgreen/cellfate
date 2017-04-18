@@ -1,5 +1,4 @@
 import os
-import numpy as np
 import scipy.io as sio
 
 from cellfate import cell_density_fun, cell_density_object
@@ -7,7 +6,7 @@ from cellfate import cell_density_fun, cell_density_object
 
 def get_data_file_path(filename, data_dir='test'):
 
-    start = os.path.abspath('__file__')
+    start = os.path.abspath(__file__)
     start_dir = os.path.dirname(start)
 
     data_dir = os.path.join(start_dir,'cellfate',data_dir)
