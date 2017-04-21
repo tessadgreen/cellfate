@@ -1,9 +1,8 @@
 import os
 import numpy as np
 import scipy.io as sio
-
 from cellfate import cell_density_fun, cell_density_object
-
+import pandas as pd
 
 def get_data_file_path(filename, data_dir='test'):
 
@@ -12,13 +11,52 @@ def get_data_file_path(filename, data_dir='test'):
 
     data_dir = os.path.join(start_dir,'cellfate',data_dir)
     return os.path.join(start_dir,data_dir,filename)
+
+def read_csv(data_name, CelltypeA, CelltypeB, BinDiv, data_dir='test'):
+    '''
+    Parameters:
+    -----------
+    data_name: the name of the .csv file containing the data with the following indices
+        Identity Labeling:
+            'ImageNumber': denoting the time step image
+            'ObjectNumber': denoting the arbitrary identity of the cell
+        Intensity classifications:
+            'Classify_Intensity_UpperQuartileIntensity_Sox2_high_Intensity_UpperQuartileIntensity_Oct4_high'
+            'Classify_Intensity_UpperQuartileIntensity_Sox2_high_Intensity_UpperQuartileIntensity_Oct4_low'
+            'Classify_Intensity_UpperQuartileIntensity_Sox2_low_Intensity_UpperQuartileIntensity_Oct4_high'
+            'Classify_Intensity_UpperQuartileIntensity_Sox2_low_Intensity_UpperQuartileIntensity_Oct4_low'
+        Locations:
+            'Location_Center_X'
+            'Location_Center_Y'
+
+    return:
+        A class object containing 
+            data, bin_num, tot_time
+    '''
+    data_path=get_data_file_path(data_name)
+    data_full=pd.read_csv(data_path)
+    data_full.rename(index=str, columns={
+        'Classify_Intensity_UpperQuartileIntensity_Sox2_high_Intensity_UpperQuartileIntensity_Oct4_high': 'both_high',
+        'Classify_Intensity_UpperQuartileIntensity_Sox2_high_Intensity_UpperQuartileIntensity_Oct4_low': 'high_Sox2',
+        'Classify_Intensity_UpperQuartileIntensity_Sox2_low_Intensity_UpperQuartileIntensity_Oct4_high': 'high_Oct4',
+        'Classify_Intensity_UpperQuartileIntensity_Sox2_low_Intensity_UpperQuartileIntensity_Oct4_low': 'both_low'
+        },inplace=True)
+    
+    #print(data_full.columns.values)
+    data_reduced=data_full[(list(data_full)[0],'both_high')]
+    print(list(data_full)[0])
+    #print(data.columns.values)
+    #print(data[5:10])
+
+    #data_raw=np.loadtxt(data_path, delimiter=',',skiprows=1)
+    #data_headers=np.loadtxt(data_path,delimiter=',',)
     
 def read(data_name, CelltypeA, CelltypeB, CellWidth, BinDiv):
     '''
     Parameters:
     -----------
     data_name: the name of the .mat metadata file of two cell types,
-        which conatins index of
+        which contains index of
         'CelltypeWidth', containing the legnth of the original cell image, 
             e.g. 'OctWidth' or 'SoxWidth'
         'CelltypeX', containing the x-coor of locations of the cell type, 
