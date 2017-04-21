@@ -16,6 +16,7 @@ class Test(TestCase):
 
     def test_csv_io(self):
         x = io.read_csv('io-test.csv','Oct4','Sox2',5)
+        #need some sort of assert here
 
     def test_diffeq_solver(self):
         nbins=6

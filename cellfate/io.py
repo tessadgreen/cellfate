@@ -12,14 +12,15 @@ def get_data_file_path(filename, data_dir='test'):
     data_dir = os.path.join(start_dir,'cellfate',data_dir)
     return os.path.join(start_dir,data_dir,filename)
 
-def read_csv(data_name, CelltypeA, CelltypeB, BinDiv, data_dir='test'):
+
+def read_csv(data_name, CelltypeA='Sox2', CelltypeB='Oct4', BinDiv, data_dir='test'):
     '''
     Parameters:
     -----------
-    data_name: the name of the .csv file containing the data with the following indices
+    data_name: the name of the .csv file containing the data with the following columns
         Identity Labeling:
-            'ImageNumber': denoting the time step image
-            'ObjectNumber': denoting the arbitrary identity of the cell
+            Column 0:'ImageNumber': denoting the time step image
+            Column 1: 'ObjectNumber': denoting the arbitrary identity of the cell
         Intensity classifications:
             'Classify_Intensity_UpperQuartileIntensity_Sox2_high_Intensity_UpperQuartileIntensity_Oct4_high'
             'Classify_Intensity_UpperQuartileIntensity_Sox2_high_Intensity_UpperQuartileIntensity_Oct4_low'
@@ -33,24 +34,45 @@ def read_csv(data_name, CelltypeA, CelltypeB, BinDiv, data_dir='test'):
         A class object containing 
             data, bin_num, tot_time
     '''
-    data_path=get_data_file_path(data_name)
-    data_full=pd.read_csv(data_path)
-    data_full.rename(index=str, columns={
-        'Classify_Intensity_UpperQuartileIntensity_Sox2_high_Intensity_UpperQuartileIntensity_Oct4_high': 'both_high',
-        'Classify_Intensity_UpperQuartileIntensity_Sox2_high_Intensity_UpperQuartileIntensity_Oct4_low': 'high_Sox2',
-        'Classify_Intensity_UpperQuartileIntensity_Sox2_low_Intensity_UpperQuartileIntensity_Oct4_high': 'high_Oct4',
-        'Classify_Intensity_UpperQuartileIntensity_Sox2_low_Intensity_UpperQuartileIntensity_Oct4_low': 'both_low'
-        },inplace=True)
-    
-    #print(data_full.columns.values)
-    data_reduced=data_full[(list(data_full)[0],'both_high')]
-    print(list(data_full)[0])
-    #print(data.columns.values)
-    #print(data[5:10])
+    #needs to be modified to take different protein names
+    both_high='Classify_Intensity_UpperQuartileIntensity_Sox2_high_Intensity_UpperQuartileIntensity_Oct4_high'
+    both_low='Classify_Intensity_UpperQuartileIntensity_Sox2_low_Intensity_UpperQuartileIntensity_Oct4_low'
+    high_Oct4='Classify_Intensity_UpperQuartileIntensity_Sox2_low_Intensity_UpperQuartileIntensity_Oct4_high'
+    high_Sox2='Classify_Intensity_UpperQuartileIntensity_Sox2_high_Intensity_UpperQuartileIntensity_Oct4_low'
 
-    #data_raw=np.loadtxt(data_path, delimiter=',',skiprows=1)
-    #data_headers=np.loadtxt(data_path,delimiter=',',)
+
+
+    data_path=get_data_file_path(data_name)
+    data_full=pd.read_csv(data_path, usecols=['ImageNumber',
+        both_high,both_low,high_Sox2,high_Oct4,'Location_Center_Y','Location_Center_X'])
+
+    data=cell_density_csv(data_full, CelltypeA, CelltypeB, BinDiv)
+    return data
+
+def cell_density_csv(input_data, CelltypeA, CelltypeB, BinDiv):
+    '''
+    This function divides the original data into (BinDiv, BinDiv) bins 
+    and calculates the density of different types of cell in each bin at 
+    different times.
+
+    Parameters:
+    -----------
+    CelltypeA:
+    CelltypeB:
+    input_data: a pandas data frame as created by read_csv
+    BinDiv: an integer telling the function how many sub-images to measure density in
+    '''
+
+    both_high='Classify_Intensity_UpperQuartileIntensity_Sox2_high_Intensity_UpperQuartileIntensity_Oct4_high'
+    both_low='Classify_Intensity_UpperQuartileIntensity_Sox2_low_Intensity_UpperQuartileIntensity_Oct4_low'
+    high_Oct4='Classify_Intensity_UpperQuartileIntensity_Sox2_low_Intensity_UpperQuartileIntensity_Oct4_high'
+    high_Sox2='Classify_Intensity_UpperQuartileIntensity_Sox2_high_Intensity_UpperQuartileIntensity_Oct4_low'
     
+    #should instead return data that's had it density processed as 
+    #in cell_density_fun previously
+    return input_data
+
+
 def read(data_name, CelltypeA, CelltypeB, CellWidth, BinDiv):
     '''
     Parameters:
