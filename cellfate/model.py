@@ -8,13 +8,13 @@ from scipy.integrate import odeint
 import pandas as pd
 from cellfate import io, cell_density_object as cdo
 
-test_params = [0, # k_ent
-               0.05, # k_div
-               0, # k_dep
-               0.6, # k_bg
-               0.1, # k_br
-               0 # k_loss
-               ]
+#test_params = [0, # k_ent
+#               0.05, # k_div
+#               0, # k_dep
+#               0.6, # k_bg
+#               0.1, # k_br
+#               0 # k_loss
+#               ]
 
 def pd2np(input_data):
     '''
@@ -29,7 +29,7 @@ def pd2np(input_data):
     binDiv = input_data.bin_num
     return np.reshape(df.as_matrix().T, (3,binDiv, binDiv, -1))
 
-def np2pd(input_np):
+def np2pd(input_np, binNum):
     '''
     Transforms ndarray into pandas dataframe.
     The resulting pandas dataframe will have following form:
@@ -43,8 +43,8 @@ def np2pd(input_np):
     '''
     # Set up the column structure for dataframe
     cols=pd.MultiIndex.from_tuples([ (x,y) for x in ['R','G','Both'] \
-                                    for y in np.arange(2*2)])
-    reshaped = np.reshape(input_np, (12, -1))
+                                    for y in np.arange(binNum*binNum)])
+    reshaped = np.reshape(input_np, (3*binNum**2, -1))
     return pd.DataFrame(reshaped.T,columns=cols)
 
 
@@ -60,12 +60,18 @@ def diffeq(w, t, p):
                   p = [k_ent,k_div,k_dep,k_bg,k_br, k_loss]
     """
     red, grn, both = w
-    k_ent, k_div, k_dep, k_bg, k_br, k_loss = p
+#    k_ent, k_div, k_dep, k_bg, k_br, k_loss = p
+    k_div, k_bg, k_br = p
 
     # Create f = (red,grn,both) - order should be same as in w vector:
-    f = [k_ent*red + (k_div - k_dep)*red + (k_br+k_loss)*both,
-         k_ent*grn + (k_div - k_dep)*grn + (k_bg-k_loss)*both,
-         k_ent*both + (k_div - k_dep)*both - (k_bg+k_br-k_loss)*both]
+#    f = [k_ent*red + (k_div - k_dep)*red + (k_br+k_loss)*both,
+#         k_ent*grn + (k_div - k_dep)*grn + (k_bg-k_loss)*both,
+#         k_ent*both + (k_div - k_dep)*both - (k_bg+k_br-k_loss)*both]
+
+    f = [k_div*red + k_br*both,
+         k_div*grn + k_bg*both,
+         k_div*both - (k_bg+k_br)*both]
+
     return f
 
   
@@ -93,7 +99,6 @@ def diffeqSolve(params, data, stoptime=20, minStepNum=200):
     # Create a grid to save the solved results
     binDiv = data.bin_num
     final_grid = np.zeros((3, binDiv , binDiv, data.tot_time))
-    
     # Solve ODE for each bin
     for i in range(binDiv):
         for j in range(binDiv):
@@ -110,12 +115,14 @@ def log_prior(theta):
         theta: model parameters (specified as a list)
     """
     # unpack the model parameters
-    k_ent, k_div, k_dep, k_bg, k_br, k_loss = theta
+#    k_ent, k_div, k_dep, k_bg, k_br, k_loss = theta
+    k_div, k_bg, k_br = theta
   
     # We can ignore normalization factor since it is constant.
     # So we simply return 0 for parameters in the specified range.
-    if 0 <= k_ent <= 1 and 0 <= k_div <= 1 and 0 <= k_dep <= 1  \
-    and 0 <= k_bg <= 1 and 0 <= k_br <= 1 and 0 <= k_loss <= 1:
+#    if 0 <= k_ent <= 1 and 0 <= k_div <= 1 and 0 <= k_dep <= 1  \
+#    and 0 <= k_bg <= 1 and 0 <= k_br <= 1 and 0 <= k_loss <= 1:
+    if 0 <= k_div <= 1 and 0 <= k_bg <= 1 and 0 <= k_br <= 1:
         return 0.0
     return -np.inf
     
@@ -128,8 +135,6 @@ def log_likelihood(theta, data, sigma_n):
         data: CellDen class object
         sigma_n: uncertainties on measured number density
     """
-    k_ent, k_div, k_dep, k_bg, k_br, k_loss = theta
-    
     model = diffeqSolve(theta, data)
     data_matrix = pd2np(data)
     residual = (data_matrix - model)**2
@@ -171,23 +176,19 @@ def plotMap(grid, duration, plotNum=10):
     both = grid[2,:,:]
     # Plot heatmap for each time i*time_step
     for i in range(plotNum):
-        print(i*time_step)
-        print(np.shape(both))
+#        print(i*time_step)
+#        print(np.shape(both))
         plt.subplot(plotNum,3,1+i*3)
-        sns.heatmap(both[:,:,i*time_step], vmin=0, vmax=30, 
-                         annot=True, fmt='.1f', cmap="Oranges")
+        sns.heatmap(both[:,:,i*time_step], vmin=0, vmax=30,
+                    annot=True, fmt='.1f', cmap="Oranges")
         
         plt.subplot(plotNum,3,2+i*3)
-        sns.heatmap(red[:,:,i*time_step], vmin=0, vmax=30, 
-                         annot=True, fmt='.1f', cmap="Reds")
+        sns.heatmap(red[:,:,i*time_step], vmin=0, vmax=30,
+                    annot=True, fmt='.1f', cmap="Reds")
     
         plt.subplot(plotNum,3,3+i*3)
-        sns.heatmap(grn[:,:,i*time_step], vmin=0, vmax=30, 
-                         annot=True, fmt='.1f', cmap="Greens")
-
-
-
-
+        sns.heatmap(grn[:,:,i*time_step], vmin=0, vmax=30,
+                    annot=True, fmt='.1f', cmap="Greens")
 
 #######################################
 # Following codes are for test purpose#
@@ -196,10 +197,13 @@ def plotMap(grid, duration, plotNum=10):
 
 #testdat = io.read('test-data.mat', 'R', 'G', 5, 2)
 #testdat_grid = np.reshape(testdat.data.as_matrix(), (3,testdat.bin_num,testdat.bin_num))
-#testdat_solved = diffeqSolve(test_params, testdat_grid)
+
+#testdat_solved = diffeqSolve(test_params, testdat)
+
 #params = [0, 0.1, 0, 0.6, 0.2, 0]
 #
 #
+#print(np.shape(testdat_solved))
 #cols=pd.MultiIndex.from_tuples([ (x,y) for x in ['R','G','Both'] for y in np.arange(2*2)])
 #reshaped = np.reshape(testdat_solved, (12, -1))
 #df = pd.DataFrame(reshaped.T,columns=cols)
@@ -215,8 +219,27 @@ def plotMap(grid, duration, plotNum=10):
 
 #print(df)
 
-#plotMap(diffeqSolve(test_params, testobject), 250, 3)
+#test_params = [0.1, # k_div
+#               0.4, # k_bg
+#               0.2, # k_br
+#               ]
+#testdat.tot_time=30
+#testdat_solved = diffeqSolve(test_params, testdat)
+#df = np2pd(testdat_solved, 2)
+#df.to_pickle('sample_2x2_30.pkl')
+#plotMap(testdat_solved, testdat.tot_time, 3)
 
+#testobject = cdo.CellDen(pd.read_pickle('sample_2x2_30.pkl'), 5)
+#import scipy.integrate as integrate
+#def likelihood(z, y, x, data, sigma_n):
+#    return np.exp(log_likelihood([x,y,z], data, sigma_n))
+#
+#a = integrate.tplquad(likelihood, 0, 0.2,
+#                      lambda x: 0.3, lambda x: 0.5,
+#                      lambda x,y: 0.1, lambda x,y: 0.3,
+#                      args=(testobject, 0.4))[0]
+#print(a)
+#
 
 #plt.figure()
 ## Plot the number of each cell over time in each bin        
