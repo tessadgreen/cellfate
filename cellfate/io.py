@@ -100,3 +100,4 @@ def read(data_file, CellA, CellB, BinDiv):
     cols=pd.MultiIndex.from_tuples([ (x,y) for x in [CellA,CellB,'Both'] for y in np.arange(BinDiv*BinDiv)])
     return pd.DataFrame(np.hstack((np.hstack((CellA_den,CellB_den)),Both_den)),columns=cols)
 
+
