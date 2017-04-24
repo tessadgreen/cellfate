@@ -170,7 +170,7 @@ def draw_cell_loc(data_file,CellA, CellB, time, BinDiv=1, bin_i=0, bin_j=0, ImgW
         title_end=' in Bin '+str(bin_i*BinDiv+bin_j)+' at time '+str(time)
     
     plt.subplot(1,3,1,aspect='equal')
-    plt.scatter(concerned_CellA_X,concerned_CellA_Y,color=colorA)
+    plt.scatter(concerned_CellA_X,concerned_CellA_Y,color=colorA, s=1.5)
     if BinDiv==1:
         plt.xlim(0,ImgWidth);plt.ylim(ImgWidth,0)
     else:
@@ -178,7 +178,7 @@ def draw_cell_loc(data_file,CellA, CellB, time, BinDiv=1, bin_i=0, bin_j=0, ImgW
     plt.title('Distribution of '+CellA+title_end)
     
     plt.subplot(1,3,2,aspect='equal')
-    plt.scatter(concerned_CellB_X,concerned_CellB_Y,color=colorB)
+    plt.scatter(concerned_CellB_X,concerned_CellB_Y,color=colorB, s=1.5)
     if BinDiv==1:
         plt.xlim(0,ImgWidth);plt.ylim(ImgWidth,0)
     else:
@@ -186,7 +186,7 @@ def draw_cell_loc(data_file,CellA, CellB, time, BinDiv=1, bin_i=0, bin_j=0, ImgW
     plt.title('Distribution of '+CellB+title_end)
     
     plt.subplot(1,3,3,aspect='equal')
-    plt.scatter(concerned_Both_X,concerned_Both_Y,color=colorBoth)
+    plt.scatter(concerned_Both_X,concerned_Both_Y,color=colorBoth, s=1.5)
     if BinDiv==1:
         plt.xlim(0,ImgWidth);plt.ylim(ImgWidth,0)
     else:
