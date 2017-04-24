@@ -1,8 +1,10 @@
 # cellfate
 
 This package uses cellular location and time data for differentiating cells to estimate the differentiation rate for different cell times in vitro. Input data is in the form of the locations and states of nuclei for a time series of images. Bayesian inference is then used to fit the differentiation rates as well as the rate of cell division.
+ 
+Differentiating embryonic stem cells make cell-fate decisions in vitro. These decisions determine what cell type--neuron, muscle, fibroblast, and many more--the cells would go on to become. These decisions are encoded by transcription factor activity in cells. Each transcription factor regulates many other genes, including other transcription factors. This allows for the diversity of cell types present in multicellular organisms. The first decision cells make, between mesendoderm and neurectoderm, can be seen in changing levels of two transcription factors, Oct4 and Sox2. Using CRISPR, these two factors have been fused to fluorescent reporters. As a result, these cells change color as they make their first fate decision. They start off in a "both" state, bright in both red and green. Then, some cells move to a "red" state, expressing only Oct4, and others move to a "green" state, expressing only Sox2. This package analyses time lapses of this process to infer the dynamics of this process.
 
-Differentiating cells should have fluorescently tagged transcription factors that provide real-time reporting of cell state. Both reporters are active in the pre-decision state, and a different one is down-regulated in each differentiated state. Starting images are of live cells in vitro.
+Cells should have fluorescently tagged transcription factors that provide real-time reporting of cell state. Both reporters are active in the pre-decision state, and a different one is down-regulated in each differentiated state. Starting images are of live cells in vitro.
 
 ## Files:
 
