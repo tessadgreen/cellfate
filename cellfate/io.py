@@ -1,7 +1,6 @@
 import os
 import scipy.io as sio
-from cellfate import cell_density_fun, cell_density_object
-import pandas as pd
+from cellfate import celldensity
 import numpy as np
 
 def get_data_file_path(filename, data_dir='test'):
@@ -49,7 +48,7 @@ def read(data_file, CellA, CellB, BinDiv, ImgWidth=1024):
     CellDen.bin_num: total bin number
     CellDen.tot_time: total time duratiron of the experiment
     '''
-    data=cell_density_fun.cell_density(data_file,CellA,CellB,BinDiv,ImgWidth)
-    return cell_density_object.CellDen(data)
+    data=celldensity.cell_density(data_file,CellA,CellB,BinDiv,ImgWidth)
+    return celldensity.CellDen(data)
 
 
