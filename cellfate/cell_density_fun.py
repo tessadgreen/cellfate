@@ -66,9 +66,9 @@ def cell_density(data_file, CellA, CellB, BinDiv, ImgWidth):
             
             i=(BinDiv-1)-i
             BinY_Low=BinWidth*i-1
-            BinY_High=BinWidth*(i+1)+1
+            BinY_High=BinWidth*(i+1)
             BinX_Low=BinWidth*j-1
-            BinX_High=BinWidth*(j+1)+1
+            BinX_High=BinWidth*(j+1)
     
             BinArea=1 #arbitrary unit
             Both_Bin_Den=len(Both_X[(Both_X>BinX_Low)*(Both_X<BinX_High)*(Both_Y>BinY_Low)*(Both_Y<BinY_High)])/BinArea
@@ -150,9 +150,9 @@ def draw_cell_loc(data_file,CellA, CellB, time, BinDiv=1, bin_i=0, bin_j=0, ImgW
     i=(BinDiv-1)-bin_i;j=bin_j
     
     BinY_Low=BinWidth*i-1
-    BinY_High=BinWidth*(i+1)+1
+    BinY_High=BinWidth*(i+1)
     BinX_Low=BinWidth*j-1
-    BinX_High=BinWidth*(j+1)+1
+    BinX_High=BinWidth*(j+1)
     
     concerned_Both_X=Both_X[(Both_X>BinX_Low)*(Both_X<BinX_High)*(Both_Y>BinY_Low)*(Both_Y<BinY_High)]
     concerned_Both_Y=Both_Y[(Both_X>BinX_Low)*(Both_X<BinX_High)*(Both_Y>BinY_Low)*(Both_Y<BinY_High)]
