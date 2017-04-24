@@ -102,7 +102,7 @@ def cell_density(data_file, CellA, CellB, BinDiv, ImgWidth):
     return pd.DataFrame(np.hstack((np.hstack((CellA_den,CellB_den)),Both_den)),columns=cols)
 
 # define a function to plot the locations of both-cells
-def draw_cell_loc(data_file,CellA, CellB, time, BinDiv=1, bin_i=0, bin_j=0, ImgWidth=1024, colorBoth='b',colorA='r',colorB='g'):
+def draw_cell_loc(data_file,CellA, CellB, time, BinDiv=1, bin_i=0, bin_j=0, ImgWidth=1024, colorBoth=[255/255,174/255,66/255],colorA='g',colorB='r'):
     '''
     data_file: the .csv file containing the data with the following columns
         Identity Labeling:
@@ -172,7 +172,7 @@ def draw_cell_loc(data_file,CellA, CellB, time, BinDiv=1, bin_i=0, bin_j=0, ImgW
     plt.subplot(1,3,1,aspect='equal')
     plt.scatter(concerned_CellA_X,concerned_CellA_Y,color=colorA)
     if BinDiv==1:
-        plt.xlim(0,ImgWidth);plt.ylim(0,ImgWidth)
+        plt.xlim(0,ImgWidth);plt.ylim(ImgWidth,0)
     else:
         plt.xlim(BinX_Low+1,BinX_High);plt.ylim(BinY_Low+1,BinY_High)
     plt.title('Distribution of '+CellA+title_end)
@@ -180,7 +180,7 @@ def draw_cell_loc(data_file,CellA, CellB, time, BinDiv=1, bin_i=0, bin_j=0, ImgW
     plt.subplot(1,3,2,aspect='equal')
     plt.scatter(concerned_CellB_X,concerned_CellB_Y,color=colorB)
     if BinDiv==1:
-        plt.xlim(0,ImgWidth);plt.ylim(0,ImgWidth)
+        plt.xlim(0,ImgWidth);plt.ylim(ImgWidth,0)
     else:
         plt.xlim(BinX_Low+1,BinX_High);plt.ylim(BinY_Low+1,BinY_High)
     plt.title('Distribution of '+CellB+title_end)
@@ -188,7 +188,7 @@ def draw_cell_loc(data_file,CellA, CellB, time, BinDiv=1, bin_i=0, bin_j=0, ImgW
     plt.subplot(1,3,3,aspect='equal')
     plt.scatter(concerned_Both_X,concerned_Both_Y,color=colorBoth)
     if BinDiv==1:
-        plt.xlim(0,ImgWidth);plt.ylim(0,ImgWidth)
+        plt.xlim(0,ImgWidth);plt.ylim(ImgWidth,0)
     else:
         plt.xlim(BinX_Low+1,BinX_High);plt.ylim(BinY_Low+1,BinY_High)
     plt.title('Distribution of '+'Both-Cell'+title_end)
