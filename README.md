@@ -2,6 +2,8 @@
 
 This package uses cellular location and time data for differentiating cells to estimate the differentiation rate for different cell times in vitro. Input data is in the form of the locations and states of nuclei for a time series of images. Bayesian inference is then used to fit the differentiation rates as well as the rate of cell division.
 
+Differentiating cells should have fluorescently tagged transcription factors that provide real-time reporting of cell state. Both reporters are active in the pre-decision state, and a different one is down-regulated in each differentiated state. Starting images are of live cells in vitro.
+
 ## Files:
 
 - model.ipynb: a jupyter notebook showing the mathematical details of the differential equation used to model the denisty of different cell types at different time t.
