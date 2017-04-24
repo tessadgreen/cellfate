@@ -2,6 +2,7 @@ import os
 import scipy.io as sio
 from cellfate import cell_density_fun, cell_density_object
 import pandas as pd
+import numpy as np
 
 def get_data_file_path(filename, data_dir='test'):
 
@@ -10,98 +11,45 @@ def get_data_file_path(filename, data_dir='test'):
 
     data_dir = os.path.join(start_dir,data_dir)
     return os.path.join(start_dir,data_dir,filename)
-
-
-def read_csv(data_name, CelltypeA='Sox2', CelltypeB='Oct4', BinDiv, data_dir='test'):
+    
+def read(data_file, CellA, CellB, BinDiv, ImgWidth=1024):
     '''
     Parameters:
     -----------
-    data_name: the name of the .csv file containing the data with the following columns
+    data_file: the .csv file containing the data with the following columns
         Identity Labeling:
             Column 0:'ImageNumber': denoting the time step image
             Column 1: 'ObjectNumber': denoting the arbitrary identity of the cell
         Intensity classifications:
-            'Classify_Intensity_UpperQuartileIntensity_Sox2_high_Intensity_UpperQuartileIntensity_Oct4_high'
-            'Classify_Intensity_UpperQuartileIntensity_Sox2_high_Intensity_UpperQuartileIntensity_Oct4_low'
-            'Classify_Intensity_UpperQuartileIntensity_Sox2_low_Intensity_UpperQuartileIntensity_Oct4_high'
-            'Classify_Intensity_UpperQuartileIntensity_Sox2_low_Intensity_UpperQuartileIntensity_Oct4_low'
+            'Classify_Intensity_UpperQuartileIntensity_CellA_high_Intensity_UpperQuartileIntensity_CellB_high'
+            'Classify_Intensity_UpperQuartileIntensity_CellA_high_Intensity_UpperQuartileIntensity_CellB_low'
+            'Classify_Intensity_UpperQuartileIntensity_CellA_low_Intensity_UpperQuartileIntensity_CellB_high'
+            'Classify_Intensity_UpperQuartileIntensity_CellA_low_Intensity_UpperQuartileIntensity_CellB_low'
+            where the order of CellA and CellB should be the same as that of the input parameter
         Locations:
             'Location_Center_X'
             'Location_Center_Y'
-
-    return:
-        A class object containing 
-            data, bin_num, tot_time
-    '''
-    #needs to be modified to take different protein names
-    both_high='Classify_Intensity_UpperQuartileIntensity_Sox2_high_Intensity_UpperQuartileIntensity_Oct4_high'
-    both_low='Classify_Intensity_UpperQuartileIntensity_Sox2_low_Intensity_UpperQuartileIntensity_Oct4_low'
-    high_Oct4='Classify_Intensity_UpperQuartileIntensity_Sox2_low_Intensity_UpperQuartileIntensity_Oct4_high'
-    high_Sox2='Classify_Intensity_UpperQuartileIntensity_Sox2_high_Intensity_UpperQuartileIntensity_Oct4_low'
-
-
-
-    data_path=get_data_file_path(data_name)
-    data_full=pd.read_csv(data_path, usecols=['ImageNumber',
-        both_high,both_low,high_Sox2,high_Oct4,'Location_Center_Y','Location_Center_X'])
-
-    data=cell_density_csv(data_full, CelltypeA, CelltypeB, BinDiv)
-    return data
-
-def cell_density_csv(input_data, CelltypeA, CelltypeB, BinDiv):
-    '''
-    This function divides the original data into (BinDiv, BinDiv) bins 
-    and calculates the density of different types of cell in each bin at 
-    different times.
-
-    Parameters:
+            
+    CellA: Name of the first cell type, e.g.'Sox2'
+    CellB: Name of the second cell type, e.g. 'Oct4'
+    BinDiv: An integer telling the function to divide the orginal cell image into BinDiv x BinDiv bins     
+    ImgWidth: the width dimension of the image in pixels (e.g. for an image of 1024x1024, just enter 1024)
+   
+    Returns:
     -----------
-    CelltypeA:
-    CelltypeB:
-    input_data: a pandas data frame as created by read_csv
-    BinDiv: an integer telling the function how many sub-images to measure density in
-    '''
-
-    both_high='Classify_Intensity_UpperQuartileIntensity_Sox2_high_Intensity_UpperQuartileIntensity_Oct4_high'
-    both_low='Classify_Intensity_UpperQuartileIntensity_Sox2_low_Intensity_UpperQuartileIntensity_Oct4_low'
-    high_Oct4='Classify_Intensity_UpperQuartileIntensity_Sox2_low_Intensity_UpperQuartileIntensity_Oct4_high'
-    high_Sox2='Classify_Intensity_UpperQuartileIntensity_Sox2_high_Intensity_UpperQuartileIntensity_Oct4_low'
-    
-    #should instead return data that's had it density processed as 
-    #in cell_density_fun previously
-    return input_data
-
-
-def read(data_name, CelltypeA, CelltypeB, CellWidth, BinDiv):
-    '''
-    Parameters:
-    -----------
-    data_name: the name of the .mat metadata file of two cell types,
-        which contains index of
-        'CelltypeWidth', containing the legnth of the original cell image, 
-            e.g. 'OctWidth' or 'SoxWidth'
-        'CelltypeX', containing the x-coor of locations of the cell type, 
-            e.g. 'OctX' or 'SoxX'
-        'CelltypeY', containing the y-coor of locations of the cell type, 
-            e.g. 'OctY' or 'SoxY'
-        for both the first and second cell types.
-    CelltypeA: Name of the first cell type, dtype=string, e.g. 'Oct'
-    CelltypeB: Name of the second cell type, dtype=string, e.g. 'Sox'
-    CellWidth: the width of the nucleus, in unit of pixels, suggested value=5
-    BinDiv: the original cell image will be divided into BinDiv x BinDiv bins,
-        in which the cell density would be intended to be calulated
+    An object with the following attributes:
         
-    Return:
-    -----------
-    A class object containing
-    data: the density of different types of cells in different bins in a dataframe
-    cellwidth: the length of the nucleus
-    bin_num: total numbers of bins
-    tot_time: total time steps of the data
+    CellDen.data: A dataframe with the density of different types of cells in the bins of the 
+    original cell image at different time t.The format of the output dataframe would be like --
+        Rows-> time index
+        Main Column-> cell types
+        Sub Column-> bin index
     
+    CellDen.cellname: a tuple of the first and second cell name
+    CellDen.bin_num: total bin number
+    CellDen.tot_time: total time duratiron of the experiment
     '''
-    data_path=get_data_file_path(data_name)
-    data_raw=sio.loadmat(data_path)
-    data=cell_density_fun.cell_density(CelltypeA,CelltypeB,data_raw,CellWidth,BinDiv)
-    return cell_density_object.CellDen(data, CellWidth)
+    data=cell_density_fun.cell_density(data_file,CellA,CellB,BinDiv,ImgWidth)
+    return cell_density_object.CellDen(data)
+
 

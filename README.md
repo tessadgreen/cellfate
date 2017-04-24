@@ -1,6 +1,6 @@
 # cellfate
 
-Fitting parameters of the model for density of human embryonic stem cells in processed images at different times t to differentiate the fates of the cells.
+This package uses cellular location and time data for differentiating cells to estimate the differentiation rate for different cell times in vitro. Input data is in the form of the locations and states of nuclei for a time series of images. Bayesian inference is then used to fit the differentiation rates as well as the rate of cell division.
 
 ## Files:
 
