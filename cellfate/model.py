@@ -176,3 +176,4 @@ def plotMap(grid, duration, plotNum=10):
         plt.subplot(plotNum,3,3+i*3)
         sns.heatmap(grn[:,:,i*time_step], vmin=0, vmax=30,
                     annot=True, fmt='.1f', cmap="Greens")
+    plt.tight_layout()
