@@ -1,151 +1,197 @@
 import numpy as np
 import pandas as pd
+import matplotlib.pyplot as plt
+from cellfate import io
 
-# define a function to find the locations of both-cells
-def loc_both(AX,AY,BX,BY,CellWidth):
-    '''
-    AX: x-coor of locations of cell type A
-    AY: y-coor of locations of cell type A
-    BX: x-coor of locations of cell type B
-    BY: y-coor of locations of cell type B
-    CellWidth: the width of the cell, in unit of pixels, suggested value=5
-    
-    '''
-    def dist(x1,y1,x2,y2):
-        return np.sqrt((x2-x1)**2+(y2-y1)**2)
-    dist_1pt_to_otherpt=np.vectorize(dist,excluded=['x1','y1'])
+#import the .csv data file for cell location as dataframe
+def load_data(data_file, CellA, CellB):
 
-    def min_dist(x1,y1):
-        
-        #consdier only 'close' points to save computational time
-        prelim_select_close_pt=(((np.abs(BX-x1)<(CellWidth))*(np.abs(BY-y1)<(CellWidth)))==1) 
-        
-        if np.sum(prelim_select_close_pt)>0 : #if there is at least one 'close' point
-            concern_BX=BX[prelim_select_close_pt]
-            concern_BY=BY[prelim_select_close_pt]
-            return np.min(dist_1pt_to_otherpt(x1,y1,concern_BX,concern_BY))
-        else:
-            #if no 'close' points
-            return np.inf
-    min_dist_vec=np.vectorize(min_dist)
-    
-    tmp_dist=min_dist_vec(AX,AY)
-    BothX=AX[tmp_dist<(CellWidth/2)]
-    BothY=AY[tmp_dist<(CellWidth/2)]
-    return BothX,BothY
+    both_high='Classify_Intensity_UpperQuartileIntensity_'+CellA+'_high_Intensity_UpperQuartileIntensity_'+CellB+'_high'
+    both_low='Classify_Intensity_UpperQuartileIntensity_'+CellA+'_low_Intensity_UpperQuartileIntensity_'+CellB+'_low'
+    high_CellA='Classify_Intensity_UpperQuartileIntensity_'+CellA+'_high_Intensity_UpperQuartileIntensity_'+CellB+'_low'
+    high_CellB='Classify_Intensity_UpperQuartileIntensity_'+CellA+'_low_Intensity_UpperQuartileIntensity_'+CellB+'_high'
 
-#divide into bins and calculate the density
-def bins_density(LocX,LocY,BinDiv,ImgWidth): 
-    '''
-    This function will compute the density of that type of cell
-    in each bin    
+    data_loc=pd.read_csv(io.get_data_file_path(data_file), usecols=['ImageNumber',\
+        both_high,both_low,high_CellA,high_CellB,'Location_Center_Y','Location_Center_X'])
     
-    LocX, LocY: location of cell of certain color/type with
-        LocX, LocY be the x- and y- coordinates respectively.
-    
-    BinDiv: The original image will be divided into BinDiv x BinDiv bins.
-    
-    ImgWidth: the legnth of the original cell image, in pixels
-    
-    '''
-    BinWidth=np.floor_divide(ImgWidth,BinDiv)
-    def one_bin_density(i,j): #bins are aranged in ith row and jth col
-        # bin_index=i*BinDiv+j
-        BinX=LocX[((LocX>(BinWidth*i-1))*(LocX<(BinWidth*(i+1)+1))\
-                   *(LocY>(BinWidth*j-1))*(LocY<(BinWidth*(j+1)+1)))]
-        BinY=LocY[((LocX>(BinWidth*i-1))*(LocX<(BinWidth*(i+1)+1))\
-                   *(LocY>(BinWidth*j-1))*(LocY<(BinWidth*(j+1)+1)))]
-        BinArea=1 #arbitrary unit
-        Den=len(BinX)/BinArea
-        return Den
-    all_bin_density=np.vectorize(one_bin_density,otypes=[np.ndarray])
-    
-    bin_j,bin_i=np.meshgrid(np.arange(BinDiv),np.arange(BinDiv))
-    return np.array(list(zip(*all_bin_density(bin_i,bin_j)))[::-1])
+    return (data_loc,both_high,both_low,high_CellA,high_CellB)
 
 #Find the density of different types of cells at different times and bins
 
-#Find the density of different types of cells at different times and bins
-
-def cell_density(CelltypeA,CelltypeB,data,CellWidth,BinDiv): 
+def cell_density(data_file, CellA, CellB, BinDiv, ImgWidth):
     '''
-    This function divides the original cell image into BinDiv x BinDiv bins 
-    and calculates the density of different types of cell in each bin at 
-    different times.
-    
     Parameters:
     -----------
-    CelltypeA: Name of the first cell type, dtype=string, e.g. 'Oct'
-    CelltypeB: Name of the second cell type, dtype=string, e.g. 'Sox'
-    data: A dictionary with index 
-            'CelltypeWidth', containing the legnth size of the original cell image, 
-                e.g. 'OctWidth'
-            'CelltypeX', containing the x-coor of locations of the cell type, 
-                e.g. 'OctX'
-            'CelltypeY', containing the y-coor of locations of the cell type, 
-                e.g. 'OctY'
-        for both the first and second cell types.
-    CellWidth: the width of the cell, in unit of pixels, suggested value=5
-    BinDiv: An integer telling the function to divide the orginal cell image 
-        into BinDiv x BinDiv bins 
+    data_file: the .csv file containing the data with the following columns
+        Identity Labeling:
+            Column 0:'ImageNumber': denoting the time step image
+            Column 1: 'ObjectNumber': denoting the arbitrary identity of the cell
+        Intensity classifications:
+            'Classify_Intensity_UpperQuartileIntensity_Sox2_high_Intensity_UpperQuartileIntensity_Oct4_high'
+            'Classify_Intensity_UpperQuartileIntensity_Sox2_high_Intensity_UpperQuartileIntensity_Oct4_low'
+            'Classify_Intensity_UpperQuartileIntensity_Sox2_low_Intensity_UpperQuartileIntensity_Oct4_high'
+            'Classify_Intensity_UpperQuartileIntensity_Sox2_low_Intensity_UpperQuartileIntensity_Oct4_low'
+        Locations:
+            'Location_Center_X'
+            'Location_Center_Y'
+            
+    CellA: Name of the first cell type, e.g.'Sox2'
+    CellB: Name of the second cell type, e.g. 'Oct4'
+    BinDiv: An integer telling the function to divide the orginal cell image into BinDiv x BinDiv bins     
+    ImgWidth: the width dimension of the image in pixels (e.g. for an image of 1024x1024, just enter 1024)
     
-    Returns:
-    --------
-    A dataframe with the density of different types of cells in the bins of the 
-    original cell image at different time t.
+    return:
+    -----------
+        A dataframe of cell density, whose
+            1) Main Columns are CellA, CellB and Both-Cell
+            2) Sub Columns are different bins
+            3) Rows are different time t
+    '''
+    data_path=io.get_data_file_path(data_file)
+    data_loc,both_high,both_low,high_CellA,high_CellB=load_data(data_path,CellA,CellB)
     
-    The format of the output dataframe would be like --
-    Rows: time index
-    Main Column: cell types
-    Sub Column: bin index
+    def bin_cell_den_at_one_t(t):
+        Both_X=data_loc.loc[((data_loc['ImageNumber']==t)&((data_loc[both_high]==1)|(data_loc[both_low]==1))),\
+                            'Location_Center_X'].values
+        Both_Y=data_loc.loc[((data_loc['ImageNumber']==t)&((data_loc[both_high]==1)|(data_loc[both_low]==1))),\
+                            'Location_Center_Y'].values
+        CellA_X=data_loc.loc[((data_loc['ImageNumber']==t)&(data_loc[high_CellA]==1)),'Location_Center_X'].values
+        CellA_Y=data_loc.loc[((data_loc['ImageNumber']==t)&(data_loc[high_CellA]==1)),'Location_Center_Y'].values
+        CellB_X=data_loc.loc[((data_loc['ImageNumber']==t)&(data_loc[high_CellB]==1)),'Location_Center_X'].values
+        CellB_Y=data_loc.loc[((data_loc['ImageNumber']==t)&(data_loc[high_CellB]==1)),'Location_Center_Y'].values
     
-    To extract the density of certain cell type at certain time of the bin bin_i,
-    you can use: Name_of_Dataframe['CellName'][time][bin_i]
-    e.g. density['Oct'][0:4][100] where density is the name of the dataframe, 
-    'Oct' is the type of cell that is concerned, 0:4 is the times that we are 
-    interested in, 100 is the bin that we are looking at
+        BinWidth=np.floor_divide(ImgWidth,BinDiv)
+        def one_bin_den(i,j):#bins are aranged in ith row and jth col
+            # bin_index=i*BinDiv+j
+            
+            i=(BinDiv-1)-i
+            BinY_Low=BinWidth*i-1
+            BinY_High=BinWidth*(i+1)+1
+            BinX_Low=BinWidth*j-1
+            BinX_High=BinWidth*(j+1)+1
+    
+            BinArea=1 #arbitrary unit
+            Both_Bin_Den=len(Both_X[(Both_X>BinX_Low)*(Both_X<BinX_High)*(Both_Y>BinY_Low)*(Both_Y<BinY_High)])/BinArea
+            CellA_Bin_Den=len(CellA_X[(CellA_X>BinX_Low)*(CellA_X<BinX_High)*(CellA_Y>BinY_Low)*(CellA_Y<BinY_High)])/BinArea
+            CellB_Bin_Den=len(CellB_X[(CellB_X>BinX_Low)*(CellB_X<BinX_High)*(CellB_Y>BinY_Low)*(CellB_Y<BinY_High)])/BinArea
+            return [CellA_Bin_Den,CellB_Bin_Den,Both_Bin_Den]
+        all_bin_den=np.vectorize(one_bin_den,otypes=[np.ndarray])
+    
+        bin_j,bin_i=np.meshgrid(np.arange(BinDiv),np.arange(BinDiv))
+        cell_den_at_t=np.array(list(all_bin_den(bin_i,bin_j).flatten()))
+    
+        CellA_den_at_t=(cell_den_at_t[:,0]).flatten()
+        CellB_den_at_t=(cell_den_at_t[:,1]).flatten()
+        Both_den_at_t=(cell_den_at_t[:,2]).flatten()
+    
+        return [CellA_den_at_t,CellB_den_at_t,Both_den_at_t]
+    bin_cell_den_at_all_t=np.vectorize(bin_cell_den_at_one_t,otypes=[np.ndarray])
+
+    max_t=data_loc['ImageNumber'].max()
+    cell_den_diff_t=bin_cell_den_at_all_t(np.arange(max_t)+1)
+    
+    CellA_den=np.zeros((max_t,BinDiv**2))
+    CellB_den=np.zeros((max_t,BinDiv**2))
+    Both_den=np.zeros((max_t,BinDiv**2))
+    for t in range(max_t):
+        CellA_den[t,:]=cell_den_diff_t[t][0]
+        CellB_den[t,:]=cell_den_diff_t[t][1]
+        Both_den[t,:]=cell_den_diff_t[t][2]
+        
+    cols=pd.MultiIndex.from_tuples([ (x,y) for x in [CellA,CellB,'Both'] for y in np.arange(BinDiv*BinDiv)])
+    return pd.DataFrame(np.hstack((np.hstack((CellA_den,CellB_den)),Both_den)),columns=cols)
+
+# define a function to plot the locations of both-cells
+def draw_cell_loc(data_file,CellA, CellB, time, BinDiv=1, bin_i=0, bin_j=0, ImgWidth=1024, colorBoth='b',colorA='r',colorB='g'):
+    '''
+    data_file: the .csv file containing the data with the following columns
+        Identity Labeling:
+            Column 0:'ImageNumber': denoting the time step image
+            Column 1: 'ObjectNumber': denoting the arbitrary identity of the cell
+        Intensity classifications:
+            'Classify_Intensity_UpperQuartileIntensity_Sox2_high_Intensity_UpperQuartileIntensity_Oct4_high'
+            'Classify_Intensity_UpperQuartileIntensity_Sox2_high_Intensity_UpperQuartileIntensity_Oct4_low'
+            'Classify_Intensity_UpperQuartileIntensity_Sox2_low_Intensity_UpperQuartileIntensity_Oct4_high'
+            'Classify_Intensity_UpperQuartileIntensity_Sox2_low_Intensity_UpperQuartileIntensity_Oct4_low'
+        Locations:
+            'Location_Center_X'
+            'Location_Center_Y'
+            
+    CellA: Name of the first cell type, e.g.'Sox2'
+    CellB: Name of the second cell type, e.g. 'Oct4'
+    
+    time: from 0 to max time
+    
+    BinDiv: An integer telling the function to divide the orginal cell image into BinDiv x BinDiv bins
+    bin_i, bin_j: from 0 to (maxmimum bin num-1), extracting the bin_i th row and the bin_j th column
+         
+    ImgWidth: the width dimension of the image in pixels (e.g. for an image of 1024x1024, just enter 1024
     
     '''
-    #for CelltypeA
-    WidthA_all=data[CelltypeA+'Width'][0]
-    LocAX_all=data[CelltypeA+'X'][0]
-    LocAY_all=data[CelltypeA+'Y'][0]
+    t=time+1
     
-    tot_time=np.size(LocAX_all)
-    ImgWidth=WidthA_all[0].flatten()[0]
+    data_path=io.get_data_file_path(data_file)
+    data_loc,both_high,both_low,high_CellA,high_CellB=load_data(data_path,CellA,CellB)
     
-    #for CelltypeB
-    WidthB_all=data[CelltypeB+'Width'][0]
-    LocBX_all=data[CelltypeB+'X'][0]
-    LocBY_all=data[CelltypeB+'Y'][0]
+    #read the concerned time t
+    Both_X=data_loc.loc[((data_loc['ImageNumber']==t)&((data_loc[both_high]==1)|(data_loc[both_low]==1))),\
+                            'Location_Center_X'].values
+    Both_Y=data_loc.loc[((data_loc['ImageNumber']==t)&((data_loc[both_high]==1)|(data_loc[both_low]==1))),\
+                            'Location_Center_Y'].values
+ 
+    CellA_X=data_loc.loc[((data_loc['ImageNumber']==t)&(data_loc[high_CellA]==1)),'Location_Center_X'].values
+    CellA_Y=data_loc.loc[((data_loc['ImageNumber']==t)&(data_loc[high_CellA]==1)),'Location_Center_Y'].values
+    CellB_X=data_loc.loc[((data_loc['ImageNumber']==t)&(data_loc[high_CellB]==1)),'Location_Center_X'].values
+    CellB_Y=data_loc.loc[((data_loc['ImageNumber']==t)&(data_loc[high_CellB]==1)),'Location_Center_Y'].values
     
-    def cell_density_at_one_t(t):
-        
-        LocAX=LocAX_all[t].flatten()
-        LocAY=LocAY_all[t].flatten()
-        
-        LocBX=LocBX_all[t].flatten()
-        LocBY=LocBY_all[t].flatten()
-        
-        LocBothX,LocBothY=loc_both(LocAX,LocAY,LocBX,LocBY,CellWidth)
-        DenA=bins_density(LocAX,LocAY,BinDiv,ImgWidth)
-        DenB=bins_density(LocBX,LocBY,BinDiv,ImgWidth)
-        DenBoth=bins_density(LocBothX,LocBothY,BinDiv,ImgWidth)
-        return [DenA,DenB,DenBoth]
-    cell_density_all_t=np.vectorize(cell_density_at_one_t,otypes=[np.ndarray])
+    #Find the coor in the specified bin
+    BinWidth=np.floor_divide(ImgWidth,BinDiv)
     
-    tmp_density=cell_density_all_t(np.arange(tot_time))
+    i=(BinDiv-1)-bin_i;j=bin_j
     
-    #reorganize the calculated cell density into a dataframe
-    density_A=np.zeros((tot_time,BinDiv*BinDiv))
-    density_B=np.zeros((tot_time,BinDiv*BinDiv))
-    density_Both=np.zeros((tot_time,BinDiv*BinDiv))
-    for t in range(tot_time): 
-        density_A[t,:]=tmp_density[t][0].flatten()
-        density_B[t,:]=tmp_density[t][1].flatten()
-        density_Both[t,:]=tmp_density[t][2].flatten()
-
-    cols=pd.MultiIndex.from_tuples([ (x,y) \
-    for x in [CelltypeA,CelltypeB,'Both'] for y in np.arange(BinDiv*BinDiv)])
-    return pd.DataFrame(np.hstack((np.hstack((density_A,density_B)),density_Both)),\
-    columns=cols)
+    BinY_Low=BinWidth*i-1
+    BinY_High=BinWidth*(i+1)+1
+    BinX_Low=BinWidth*j-1
+    BinX_High=BinWidth*(j+1)+1
+    
+    concerned_Both_X=Both_X[(Both_X>BinX_Low)*(Both_X<BinX_High)*(Both_Y>BinY_Low)*(Both_Y<BinY_High)]
+    concerned_Both_Y=Both_Y[(Both_X>BinX_Low)*(Both_X<BinX_High)*(Both_Y>BinY_Low)*(Both_Y<BinY_High)]
+    concerned_CellA_X=CellA_X[(CellA_X>BinX_Low)*(CellA_X<BinX_High)*(CellA_Y>BinY_Low)*(CellA_Y<BinY_High)]
+    concerned_CellA_Y=CellA_Y[(CellA_X>BinX_Low)*(CellA_X<BinX_High)*(CellA_Y>BinY_Low)*(CellA_Y<BinY_High)]
+    concerned_CellB_X=CellB_X[(CellB_X>BinX_Low)*(CellB_X<BinX_High)*(CellB_Y>BinY_Low)*(CellB_Y<BinY_High)]
+    concerned_CellB_Y=CellB_Y[(CellB_X>BinX_Low)*(CellB_X<BinX_High)*(CellB_Y>BinY_Low)*(CellB_Y<BinY_High)]
+    
+    #plot out the cell distribution
+    plt.figure(figsize=(12,3))
+    
+    if BinDiv==1:
+        title_end=' at time '+str(time)
+    else:
+        title_end=' in Bin '+str(bin_i*BinDiv+bin_j)+' at time '+str(time)
+    
+    plt.subplot(1,3,1,aspect='equal')
+    plt.scatter(concerned_CellA_X,concerned_CellA_Y,color=colorA)
+    if BinDiv==1:
+        plt.xlim(0,1024);plt.ylim(0,1024)
+    else:
+        plt.xlim(BinX_Low+1,BinX_High-1);plt.ylim(BinY_Low+1,BinY_High-1)
+    plt.title('Distribution of '+CellA+title_end)
+    
+    plt.subplot(1,3,2,aspect='equal')
+    plt.scatter(concerned_CellB_X,concerned_CellB_Y,color=colorB)
+    if BinDiv==1:
+        plt.xlim(0,1024);plt.ylim(0,1024)
+    else:
+        plt.xlim(BinX_Low+1,BinX_High-1);plt.ylim(BinY_Low+1,BinY_High-1)
+    plt.title('Distribution of '+CellB+title_end)
+    
+    plt.subplot(1,3,3,aspect='equal')
+    plt.scatter(concerned_Both_X,concerned_Both_Y,color=colorBoth)
+    if BinDiv==1:
+        plt.xlim(0,1024);plt.ylim(0,1024)
+    else:
+        plt.xlim(BinX_Low+1,BinX_High-1);plt.ylim(BinY_Low+1,BinY_High-1)
+    plt.title('Distribution of '+'Both-Cell'+title_end)
+    
+    plt.tight_layout()
+    return
