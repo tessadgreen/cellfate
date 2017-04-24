@@ -1,8 +1,8 @@
 import numpy as np
 import pandas as pd
+import seaborn as sns
 import matplotlib.pyplot as plt
 from cellfate import io
-import seaborn as sns
 
 #import the .csv data file for cell location as dataframe
 def load_data(data_file, CellA, CellB):
@@ -175,7 +175,7 @@ def draw_cell_loc(data_file,CellA, CellB, time, BinDiv=1, bin_i=0, bin_j=0, ImgW
     if BinDiv==1:
         plt.xlim(0,ImgWidth);plt.ylim(ImgWidth,0)
     else:
-        plt.xlim(BinX_Low+1,BinX_High);plt.ylim(BinY_High, BinY_Low+1)
+        plt.xlim(BinX_Low+1,BinX_High);plt.ylim(BinY_Low+1,BinY_High)
     plt.title('Distribution of '+CellA+title_end)
     
     plt.subplot(1,3,2,aspect='equal')
@@ -183,7 +183,7 @@ def draw_cell_loc(data_file,CellA, CellB, time, BinDiv=1, bin_i=0, bin_j=0, ImgW
     if BinDiv==1:
         plt.xlim(0,ImgWidth);plt.ylim(ImgWidth,0)
     else:
-        plt.xlim(BinX_Low+1,BinX_High);plt.ylim(BinY_High, BinY_Low+1)
+        plt.xlim(BinX_Low+1,BinX_High);plt.ylim(BinY_Low+1,BinY_High)
     plt.title('Distribution of '+CellB+title_end)
     
     plt.subplot(1,3,3,aspect='equal')
@@ -191,12 +191,11 @@ def draw_cell_loc(data_file,CellA, CellB, time, BinDiv=1, bin_i=0, bin_j=0, ImgW
     if BinDiv==1:
         plt.xlim(0,ImgWidth);plt.ylim(ImgWidth,0)
     else:
-        plt.xlim(BinX_Low+1,BinX_High);plt.ylim(BinY_High, BinY_Low+1)
+        plt.xlim(BinX_Low+1,BinX_High);plt.ylim(BinY_Low+1,BinY_High)
     plt.title('Distribution of '+'Both-Cell'+title_end)
     
     plt.tight_layout()
     return
-
 
 class CellDen:
     """
@@ -241,7 +240,7 @@ class CellDen:
         '''
         return np.reshape(self.data.as_matrix().T, (3,self.bin_num, self.bin_num, -1))
         
-        
+
     def plotMap(self, plotNum=3):
         '''
         Plot the heatmap of each type of cell over time
