@@ -175,7 +175,7 @@ def draw_cell_loc(data_file,CellA, CellB, time, BinDiv=1, bin_i=0, bin_j=0, ImgW
     if BinDiv==1:
         plt.xlim(0,ImgWidth);plt.ylim(ImgWidth,0)
     else:
-        plt.xlim(BinX_Low+1,BinX_High);plt.ylim(BinY_Low+1,BinY_High)
+        plt.xlim(BinX_Low+1,BinX_High);plt.ylim(BinY_High,BinY_Low+1)
     plt.title('Distribution of '+CellA+title_end)
     
     plt.subplot(1,3,2,aspect='equal')
@@ -183,7 +183,7 @@ def draw_cell_loc(data_file,CellA, CellB, time, BinDiv=1, bin_i=0, bin_j=0, ImgW
     if BinDiv==1:
         plt.xlim(0,ImgWidth);plt.ylim(ImgWidth,0)
     else:
-        plt.xlim(BinX_Low+1,BinX_High);plt.ylim(BinY_Low+1,BinY_High)
+        plt.xlim(BinX_Low+1,BinX_High);plt.ylim(BinY_High,BinY_Low+1)
     plt.title('Distribution of '+CellB+title_end)
     
     plt.subplot(1,3,3,aspect='equal')
@@ -191,7 +191,7 @@ def draw_cell_loc(data_file,CellA, CellB, time, BinDiv=1, bin_i=0, bin_j=0, ImgW
     if BinDiv==1:
         plt.xlim(0,ImgWidth);plt.ylim(ImgWidth,0)
     else:
-        plt.xlim(BinX_Low+1,BinX_High);plt.ylim(BinY_Low+1,BinY_High)
+        plt.xlim(BinX_Low+1,BinX_High);plt.ylim(BinY_High,BinY_Low+1)
     plt.title('Distribution of '+'Both-Cell'+title_end)
     
     plt.tight_layout()

@@ -74,7 +74,7 @@ def diffeqSolve(params, data, stoptime=20, minStepNum=200):
         minStepNum: defines minimum number of timesteps for solving diffeq
     '''
     
-    data_matrix = pd2np(data)
+    data_matrix = data.pd2np()
     init_cond = data_matrix[:,:,:,0]
 
     # Create the time samples for the output of the ODE solver.
@@ -120,7 +120,7 @@ def log_likelihood(theta, data, sigma_n):
         sigma_n: uncertainties on measured number density
     """
     model = diffeqSolve(theta, data)
-    data_matrix = pd2np(data)
+    data_matrix = data.pd2np()
     residual = (data_matrix - model)**2
     chi_square = np.sum(residual/(sigma_n**2))
     constant = np.sum(np.log(1/np.sqrt(2.0*np.pi*sigma_n**2)))*residual.size
@@ -176,4 +176,4 @@ def plotMap(grid, duration, plotNum=10):
         plt.subplot(plotNum,3,3+i*3)
         sns.heatmap(grn[:,:,i*time_step], vmin=0, vmax=30,
                     annot=True, fmt='.1f', cmap="Greens")
-    plt.tight_layout()
+#    plt.tight_layout()

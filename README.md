@@ -10,17 +10,15 @@ Cells should have fluorescently tagged transcription factors that provide real-t
 
 - model.ipynb: a jupyter notebook showing the mathematical details of the differential equation used to model the denisty of different cell types at different time t.
 
-- cell_density_fun.py: contains the functions to calculate densities of different types of cells in different bins at different times.
+- celldensity.py: contains 
+    1) the function to calculate densities of different types of cells in different bins at different times.
+    2) the function to plot the cell distribution at certain time and certain bin
+    3) contains a class to put the follwing attribute ->
+       * the dataframe of the process cell density data 
+       * information of the names of the cell, num of bins and total time step of the data
+       * a function to plot the heatmap of the cell density
 
-- cell_density_object.py: contains a class to put the follwing items into an object 
-    1) the dataframe of the process cell density data 
-    2) information of the size of a nulcues, num of bins and total time step of the data
-
-- io.py: contains the functions to load the metadata from a .mat file with index 
-    'CelltypeWidth', containing the legnth of the original cell image, (e.g. 'OctWidth' or 'SoxWidth')
-    'CelltypeX', containing the x-coor of locations of the cell type, (e.g. 'OctX' or 'SoxX')
-    'CelltypeY', containing the y-coor of locations of the cell type, (e.g. 'OctY' or 'SoxY')
-  for both the first and second cell types and it will output an object containing the data of cell density descibed above in 'cell_density_object.py'.
+- io.py: contains the functions to load the .csv file containing the data with the cell location information and it will output an object containing the data of cell density descibed in 'celldensity.py'.
 
 - model.py: contains the functions to solve ODE for our model and to calculate likelihood function
 
