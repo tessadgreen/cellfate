@@ -102,7 +102,7 @@ def cell_density(data_file, CellA, CellB, BinDiv, ImgWidth):
     cols=pd.MultiIndex.from_tuples([ (x,y) for x in [CellA,CellB,'Both'] for y in np.arange(BinDiv*BinDiv)])
     return pd.DataFrame(np.hstack((np.hstack((CellA_den,CellB_den)),Both_den)),columns=cols)
 
-# define a function to plot the locations of both-cells
+# define a function to plot the locations of different types of cells
 def draw_cell_loc(data_file,CellA, CellB, time, BinDiv=1, bin_i=0, bin_j=0, ImgWidth=1024, colorBoth=[255/255,174/255,66/255],colorA='g',colorB='r'):
     '''
     data_file: the .csv file containing the data with the following columns
