@@ -5,6 +5,7 @@ import numpy as np
 import seaborn as sns
 import matplotlib.pyplot as plt
 from scipy.integrate import odeint
+import emcee
 import pandas as pd
 
 def pd2np(input_data):
@@ -144,6 +145,14 @@ def log_posterior(theta, data, sigma_n):
     return lp + log_likelihood(theta, data, sigma_n)
 
 def negative_log_posterior(theta, data, sigma_n):
+    """
+    returns the negative log of posterior probability distribution
+    
+    Parameters:
+        theta: model parameters (specified as a list)
+        data: CellDen class object
+        sigma_n: uncertainties on measured number density
+    """
     return -log_posterior(theta, data, sigma_n)
 
     
@@ -177,3 +186,27 @@ def plotMap(grid, duration, plotNum=10):
         sns.heatmap(grn[:,:,i*time_step], vmin=0, vmax=30,
                     annot=True, fmt='.1f', cmap="Greens")
 #    plt.tight_layout()
+
+
+def k_sampler(data, sigma_n, init_params, spread, nwalkers = 20, nsteps = 500):
+    ndim = 3
+    '''
+    Use an affine invariant sampler to find the MAP k parameters
+    
+    Arguments:
+        data: data to which parameters are to be fit
+        sigma_n: uncertainties on measured number density
+        init_params: initial guesses for k parameters
+        spread: a scalar describing the width of the gaussian ball around which 
+                the walkers will be started
+        nwalkers: the number of walkers in the sampler
+        nsteps: the number of steps run by the sampler
+    '''
+    # Starting positions in Gaussian ball
+    starting_positions = [init_params + spread*np.random.randn(ndim)\
+                      for i in range(nwalkers)]
+    # Set up the sampler object
+    sampler = emcee.EnsembleSampler(nwalkers, ndim, log_posterior, \
+                                    args=(data, sigma_n))
+    sampler.run_mcmc(starting_positions, nsteps)
+    return sampler
