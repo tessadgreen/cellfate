@@ -5,6 +5,10 @@ import cellfate
 from cellfate import io
 from cellfate import model 
 from cellfate import celldensity
+import pickle as pkl
+from cellfate import model
+import scipy.optimize as op
+
 
 class Test(TestCase):
     def test_is_string(self):
@@ -54,3 +58,19 @@ class Test(TestCase):
 
         self.assertTrue(val_2 < val_1)
 
+    def test_inference(self):
+        """ Tests that inference on simulated data returns accurate params """
+
+        #import data 
+        path=io.get_data_file_path('simulated_data.pkl')
+        test_data=pd.read_pickle(path)
+        data=celldensity.CellDen(test_data)
+        #test data generated using k=[0.018, 0.001, 0.002]
+
+        k0=[0.02,0.005,0.001]
+        res = op.fmin(model.negative_log_posterior, k0, args=(data, 1000))
+        np.testing.assert_almost_equal(res,k0,2)
+
+
+        #sampler=model.k_sampler(data, 1000, res, 1e-4)
+        #samples = sampler.chain[:,300:,:]
