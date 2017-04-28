@@ -15,8 +15,11 @@ class Test(TestCase):
     def test_io(self):
         """ Test of data import"""
         x = io.read('io-test.csv','Sox2','Oct4',2)
+        #check that there are 28 cells total
+        assert x.data.sum().sum()==28.0
         assert x.bin_num==2
-
+        assert (x.data['Sox2'][3].values==[2.,1.,3.]).all()
+        
     def test_diffeq_solver(self):
         """Tests that test_diffeq_solver returns array of correct shape"""
         nbins=6
