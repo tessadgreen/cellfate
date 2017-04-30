@@ -33,7 +33,7 @@ def cell_density(data_file, CellA, CellB, BinDiv, ImgWidth):
         A dataframe of cell density, whose
             1) Main Columns are CellA, CellB and Both-Cell
             2) Sub Columns are different bins
-            3) Rows are different time t
+            3) Rows are different time step t
     '''
     data_path=io.get_data_file_path(data_file)
     data_loc,both_high,both_low,high_CellA,high_CellB=io.load_data(data_path,CellA,CellB)
@@ -108,7 +108,7 @@ def draw_cell_loc(data_file,CellA, CellB, time, BinDiv=1, bin_i=0, bin_j=0, ImgW
     CellA: Name of the first cell type, e.g.'Sox2'
     CellB: Name of the second cell type, e.g. 'Oct4'
 
-    time: from 0 to max time
+    time: from 0 to (max time step-1)
 
     BinDiv: An integer telling the function to divide the orginal cell image into BinDiv x BinDiv bins
     bin_i, bin_j: from 0 to (maxmimum bin num-1), extracting the bin_i th row and the bin_j th column
@@ -200,13 +200,13 @@ class CellDen:
 
     CellDen.cellname: a tuple of the first and second cell name
     CellDen.bin_num: total bin number
-    CellDen.tot_time: total time duratiron of the experiment
+    CellDen.tot_time: total number of time steps of the experiment
 
     """
 
-    def __init__(self, data):
+    def __init__(self, data, time_scale=15):
         self.data = data
-
+        
         CellA=list(data.columns.levels)[0][2]
         CellB=list(data.columns.levels)[0][1]
         self.cellname=(CellA,CellB)
@@ -215,7 +215,11 @@ class CellDen:
         bin_num=np.sqrt(bin_num_tmp/3)
         self.bin_num = int(bin_num)
         self.tot_time = tot_time
-
+        
+        self.time_scale=time_scale
+        
+        
+        
     def pd2np(self):
         '''
         Transforms pandas dataframe of input CellDen object into numpy array
