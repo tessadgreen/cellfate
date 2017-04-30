@@ -32,7 +32,7 @@ def load_data(data_file, CellA, CellB):
 
     return (data_loc,both_high,both_low,high_CellA,high_CellB)
 
-def read(data_file, CellA, CellB, BinDiv, ImgWidth=1024):
+def read(data_file, CellA, CellB, BinDiv, ImgWidth=1024, time_scale=15):
     '''
     Parameters:
     -----------
@@ -54,6 +54,7 @@ def read(data_file, CellA, CellB, BinDiv, ImgWidth=1024):
     CellB: Name of the second cell type, e.g. 'Oct4'
     BinDiv: An integer telling the function to divide the orginal cell image into BinDiv x BinDiv bins
     ImgWidth: the width dimension of the image in pixels (e.g. for an image of 1024x1024, just enter 1024)
+    time_scale: time scale of each time step between subsequent images, in minutes
 
     Returns:
     -----------
@@ -67,7 +68,8 @@ def read(data_file, CellA, CellB, BinDiv, ImgWidth=1024):
 
     CellDen.cellname: a tuple of the first and second cell name
     CellDen.bin_num: total bin number
-    CellDen.tot_time: total time duratiron of the experiment
+    CellDen.tot_time: total time step of the experiment
+    CellDen.time_scale: time scale between subsequent time steps
     '''
     data=celldensity.cell_density(data_file,CellA,CellB,BinDiv,ImgWidth)
-    return celldensity.CellDen(data)
+    return celldensity.CellDen(data,time_scale)
