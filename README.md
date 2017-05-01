@@ -15,7 +15,7 @@ Cells should have fluorescently tagged transcription factors that provide real-t
     2) the function to plot the cell distribution at certain time and certain bin
     3) contains a class to put the follwing attribute ->
        * the dataframe of the process cell density data 
-       * information of the names of the cell, num of bins and total time step of the data
+       * information of the names of the cell, num of bins, length scale, time scale and total time step of the data
        * a function to plot the heatmap of the cell density
 
 - io.py: contains the functions to load the .csv file containing the data with the cell location information and it will output an object containing the data of cell density descibed in 'celldensity.py'.
