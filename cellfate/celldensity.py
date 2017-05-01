@@ -6,7 +6,7 @@ from cellfate import io
 
 #Find the density of different types of cells at different times and bins
 
-def cell_density(data_file, CellA, CellB, BinDiv, ImgWidth):
+def cell_density(data_file, CellA, CellB, BinDiv, length_scale, ImgWidth):
     '''
     Parameters:
     -----------
@@ -26,14 +26,15 @@ def cell_density(data_file, CellA, CellB, BinDiv, ImgWidth):
     CellA: Name of the first cell type, e.g.'Sox2'
     CellB: Name of the second cell type, e.g. 'Oct4'
     BinDiv: An integer telling the function to divide the orginal cell image into BinDiv x BinDiv bins
-    ImgWidth: the width dimension of the image in pixels (e.g. for an image of 1024x1024, just enter 1024)
+    length_scale: length_scale: linear size scale of the image, in mm
+    ImgWidth: the linear size of the image in pixels (e.g. for an image of 1024x1024, just enter 1024)
 
     return:
     -----------
         A dataframe of cell density, whose
             1) Main Columns are CellA, CellB and Both-Cell
             2) Sub Columns are different bins
-            3) Rows are different time t
+            3) Rows are different time step t
     '''
     data_path=io.get_data_file_path(data_file)
     data_loc,both_high,both_low,high_CellA,high_CellB=io.load_data(data_path,CellA,CellB)
@@ -53,15 +54,15 @@ def cell_density(data_file, CellA, CellB, BinDiv, ImgWidth):
             # bin_index=i*BinDiv+j
 
             i=(BinDiv-1)-i
-            BinY_Low=BinWidth*i-1
+            BinY_Low=BinWidth*i
             BinY_High=BinWidth*(i+1)
-            BinX_Low=BinWidth*j-1
+            BinX_Low=BinWidth*j
             BinX_High=BinWidth*(j+1)
 
-            BinArea=1 #arbitrary unit
-            Both_Bin_Den=len(Both_X[(Both_X>BinX_Low)*(Both_X<BinX_High)*(Both_Y>BinY_Low)*(Both_Y<BinY_High)])/BinArea
-            CellA_Bin_Den=len(CellA_X[(CellA_X>BinX_Low)*(CellA_X<BinX_High)*(CellA_Y>BinY_Low)*(CellA_Y<BinY_High)])/BinArea
-            CellB_Bin_Den=len(CellB_X[(CellB_X>BinX_Low)*(CellB_X<BinX_High)*(CellB_Y>BinY_Low)*(CellB_Y<BinY_High)])/BinArea
+            BinArea=((length_scale/ImgWidth)*BinWidth)**2
+            Both_Bin_Den=len(Both_X[(Both_X>=BinX_Low)*(Both_X<BinX_High)*(Both_Y>=BinY_Low)*(Both_Y<BinY_High)])/BinArea
+            CellA_Bin_Den=len(CellA_X[(CellA_X>=BinX_Low)*(CellA_X<BinX_High)*(CellA_Y>=BinY_Low)*(CellA_Y<BinY_High)])/BinArea
+            CellB_Bin_Den=len(CellB_X[(CellB_X>=BinX_Low)*(CellB_X<BinX_High)*(CellB_Y>=BinY_Low)*(CellB_Y<BinY_High)])/BinArea
             return [CellA_Bin_Den,CellB_Bin_Den,Both_Bin_Den]
         all_bin_den=np.vectorize(one_bin_den,otypes=[np.ndarray])
 
@@ -108,7 +109,7 @@ def draw_cell_loc(data_file,CellA, CellB, time, BinDiv=1, bin_i=0, bin_j=0, ImgW
     CellA: Name of the first cell type, e.g.'Sox2'
     CellB: Name of the second cell type, e.g. 'Oct4'
 
-    time: from 0 to max time
+    time: from 0 to (max time step-1)
 
     BinDiv: An integer telling the function to divide the orginal cell image into BinDiv x BinDiv bins
     bin_i, bin_j: from 0 to (maxmimum bin num-1), extracting the bin_i th row and the bin_j th column
@@ -137,17 +138,17 @@ def draw_cell_loc(data_file,CellA, CellB, time, BinDiv=1, bin_i=0, bin_j=0, ImgW
 
     i=(BinDiv-1)-bin_i;j=bin_j
 
-    BinY_Low=BinWidth*i-1
+    BinY_Low=BinWidth*i
     BinY_High=BinWidth*(i+1)
-    BinX_Low=BinWidth*j-1
+    BinX_Low=BinWidth*j
     BinX_High=BinWidth*(j+1)
 
-    concerned_Both_X=Both_X[(Both_X>BinX_Low)*(Both_X<BinX_High)*(Both_Y>BinY_Low)*(Both_Y<BinY_High)]
-    concerned_Both_Y=Both_Y[(Both_X>BinX_Low)*(Both_X<BinX_High)*(Both_Y>BinY_Low)*(Both_Y<BinY_High)]
-    concerned_CellA_X=CellA_X[(CellA_X>BinX_Low)*(CellA_X<BinX_High)*(CellA_Y>BinY_Low)*(CellA_Y<BinY_High)]
-    concerned_CellA_Y=CellA_Y[(CellA_X>BinX_Low)*(CellA_X<BinX_High)*(CellA_Y>BinY_Low)*(CellA_Y<BinY_High)]
-    concerned_CellB_X=CellB_X[(CellB_X>BinX_Low)*(CellB_X<BinX_High)*(CellB_Y>BinY_Low)*(CellB_Y<BinY_High)]
-    concerned_CellB_Y=CellB_Y[(CellB_X>BinX_Low)*(CellB_X<BinX_High)*(CellB_Y>BinY_Low)*(CellB_Y<BinY_High)]
+    concerned_Both_X=Both_X[(Both_X>=BinX_Low)*(Both_X<BinX_High)*(Both_Y>=BinY_Low)*(Both_Y<BinY_High)]
+    concerned_Both_Y=Both_Y[(Both_X>=BinX_Low)*(Both_X<BinX_High)*(Both_Y>=BinY_Low)*(Both_Y<BinY_High)]
+    concerned_CellA_X=CellA_X[(CellA_X>=BinX_Low)*(CellA_X<BinX_High)*(CellA_Y>=BinY_Low)*(CellA_Y<BinY_High)]
+    concerned_CellA_Y=CellA_Y[(CellA_X>=BinX_Low)*(CellA_X<BinX_High)*(CellA_Y>=BinY_Low)*(CellA_Y<BinY_High)]
+    concerned_CellB_X=CellB_X[(CellB_X>=BinX_Low)*(CellB_X<BinX_High)*(CellB_Y>=BinY_Low)*(CellB_Y<BinY_High)]
+    concerned_CellB_Y=CellB_Y[(CellB_X>=BinX_Low)*(CellB_X<BinX_High)*(CellB_Y>=BinY_Low)*(CellB_Y<BinY_High)]
 
     #plot out the cell distribution
     plt.figure(figsize=(12,3))
@@ -189,6 +190,8 @@ class CellDen:
     Parameters:
     -----------
     data: the processed data for densities of types of cell in a dataframe
+    time_scale: time scale between subsequent time steps, in hours
+    length_scale: linear size scale of the image, in mm
 
     Attributes:
     -----------
@@ -200,13 +203,16 @@ class CellDen:
 
     CellDen.cellname: a tuple of the first and second cell name
     CellDen.bin_num: total bin number
-    CellDen.tot_time: total time duratiron of the experiment
+    CellDen.tot_time: total number of time steps of the experiment
+    
+    CellDen.time_scale: time scale between subsequent time steps, in hours
+    CellDen.length_scale: linear size scale of the image, in mm
 
     """
 
-    def __init__(self, data):
+    def __init__(self, data, time_scale=0.25,length_scale=1.33):
         self.data = data
-
+        
         CellA=list(data.columns.levels)[0][2]
         CellB=list(data.columns.levels)[0][1]
         self.cellname=(CellA,CellB)
@@ -215,7 +221,11 @@ class CellDen:
         bin_num=np.sqrt(bin_num_tmp/3)
         self.bin_num = int(bin_num)
         self.tot_time = tot_time
-
+        
+        self.time_scale=time_scale
+        self.length_scale=length_scale
+        
+        
     def pd2np(self):
         '''
         Transforms pandas dataframe of input CellDen object into numpy array
