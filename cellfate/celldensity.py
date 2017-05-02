@@ -26,7 +26,7 @@ def cell_density(data_file, CellA, CellB, BinDiv, ImgWidth):
     CellA: Name of the first cell type, e.g.'Sox2'
     CellB: Name of the second cell type, e.g. 'Oct4'
     BinDiv: An integer telling the function to divide the orginal cell image into BinDiv x BinDiv bins
-    ImgWidth: the width dimension of the image in pixels (e.g. for an image of 1024x1024, just enter 1024)
+    ImgWidth: the linear size of the image in pixels (e.g. for an image of 1024x1024, just enter 1024)
 
     return:
     -----------
@@ -53,15 +53,15 @@ def cell_density(data_file, CellA, CellB, BinDiv, ImgWidth):
             # bin_index=i*BinDiv+j
 
             i=(BinDiv-1)-i
-            BinY_Low=BinWidth*i-1
+            BinY_Low=BinWidth*i
             BinY_High=BinWidth*(i+1)
-            BinX_Low=BinWidth*j-1
+            BinX_Low=BinWidth*j
             BinX_High=BinWidth*(j+1)
 
-            BinArea=1 #arbitrary unit
-            Both_Bin_Den=len(Both_X[(Both_X>BinX_Low)*(Both_X<BinX_High)*(Both_Y>BinY_Low)*(Both_Y<BinY_High)])/BinArea
-            CellA_Bin_Den=len(CellA_X[(CellA_X>BinX_Low)*(CellA_X<BinX_High)*(CellA_Y>BinY_Low)*(CellA_Y<BinY_High)])/BinArea
-            CellB_Bin_Den=len(CellB_X[(CellB_X>BinX_Low)*(CellB_X<BinX_High)*(CellB_Y>BinY_Low)*(CellB_Y<BinY_High)])/BinArea
+            BinArea=1 #treat as unit area, otherwise can use ((length_scale/ImgWidth)*BinWidth)**2
+            Both_Bin_Den=len(Both_X[(Both_X>=BinX_Low)*(Both_X<BinX_High)*(Both_Y>=BinY_Low)*(Both_Y<BinY_High)])/BinArea
+            CellA_Bin_Den=len(CellA_X[(CellA_X>=BinX_Low)*(CellA_X<BinX_High)*(CellA_Y>=BinY_Low)*(CellA_Y<BinY_High)])/BinArea
+            CellB_Bin_Den=len(CellB_X[(CellB_X>=BinX_Low)*(CellB_X<BinX_High)*(CellB_Y>=BinY_Low)*(CellB_Y<BinY_High)])/BinArea
             return [CellA_Bin_Den,CellB_Bin_Den,Both_Bin_Den]
         all_bin_den=np.vectorize(one_bin_den,otypes=[np.ndarray])
 
@@ -137,17 +137,17 @@ def draw_cell_loc(data_file,CellA, CellB, time, BinDiv=1, bin_i=0, bin_j=0, ImgW
 
     i=(BinDiv-1)-bin_i;j=bin_j
 
-    BinY_Low=BinWidth*i-1
+    BinY_Low=BinWidth*i
     BinY_High=BinWidth*(i+1)
-    BinX_Low=BinWidth*j-1
+    BinX_Low=BinWidth*j
     BinX_High=BinWidth*(j+1)
 
-    concerned_Both_X=Both_X[(Both_X>BinX_Low)*(Both_X<BinX_High)*(Both_Y>BinY_Low)*(Both_Y<BinY_High)]
-    concerned_Both_Y=Both_Y[(Both_X>BinX_Low)*(Both_X<BinX_High)*(Both_Y>BinY_Low)*(Both_Y<BinY_High)]
-    concerned_CellA_X=CellA_X[(CellA_X>BinX_Low)*(CellA_X<BinX_High)*(CellA_Y>BinY_Low)*(CellA_Y<BinY_High)]
-    concerned_CellA_Y=CellA_Y[(CellA_X>BinX_Low)*(CellA_X<BinX_High)*(CellA_Y>BinY_Low)*(CellA_Y<BinY_High)]
-    concerned_CellB_X=CellB_X[(CellB_X>BinX_Low)*(CellB_X<BinX_High)*(CellB_Y>BinY_Low)*(CellB_Y<BinY_High)]
-    concerned_CellB_Y=CellB_Y[(CellB_X>BinX_Low)*(CellB_X<BinX_High)*(CellB_Y>BinY_Low)*(CellB_Y<BinY_High)]
+    concerned_Both_X=Both_X[(Both_X>=BinX_Low)*(Both_X<BinX_High)*(Both_Y>=BinY_Low)*(Both_Y<BinY_High)]
+    concerned_Both_Y=Both_Y[(Both_X>=BinX_Low)*(Both_X<BinX_High)*(Both_Y>=BinY_Low)*(Both_Y<BinY_High)]
+    concerned_CellA_X=CellA_X[(CellA_X>=BinX_Low)*(CellA_X<BinX_High)*(CellA_Y>=BinY_Low)*(CellA_Y<BinY_High)]
+    concerned_CellA_Y=CellA_Y[(CellA_X>=BinX_Low)*(CellA_X<BinX_High)*(CellA_Y>=BinY_Low)*(CellA_Y<BinY_High)]
+    concerned_CellB_X=CellB_X[(CellB_X>=BinX_Low)*(CellB_X<BinX_High)*(CellB_Y>=BinY_Low)*(CellB_Y<BinY_High)]
+    concerned_CellB_Y=CellB_Y[(CellB_X>=BinX_Low)*(CellB_X<BinX_High)*(CellB_Y>=BinY_Low)*(CellB_Y<BinY_High)]
 
     #plot out the cell distribution
     plt.figure(figsize=(12,3))
@@ -162,7 +162,7 @@ def draw_cell_loc(data_file,CellA, CellB, time, BinDiv=1, bin_i=0, bin_j=0, ImgW
     if BinDiv==1:
         plt.xlim(0,ImgWidth);plt.ylim(ImgWidth,0)
     else:
-        plt.xlim(BinX_Low+1,BinX_High);plt.ylim(BinY_High,BinY_Low+1)
+        plt.xlim(BinX_Low,BinX_High);plt.ylim(BinY_High,BinY_Low+1)
     plt.title('Distribution of '+CellA+title_end)
 
     plt.subplot(1,3,2,aspect='equal')
@@ -170,7 +170,7 @@ def draw_cell_loc(data_file,CellA, CellB, time, BinDiv=1, bin_i=0, bin_j=0, ImgW
     if BinDiv==1:
         plt.xlim(0,ImgWidth);plt.ylim(ImgWidth,0)
     else:
-        plt.xlim(BinX_Low+1,BinX_High);plt.ylim(BinY_High,BinY_Low+1)
+        plt.xlim(BinX_Low,BinX_High);plt.ylim(BinY_High,BinY_Low+1)
     plt.title('Distribution of '+CellB+title_end)
 
     plt.subplot(1,3,3,aspect='equal')
@@ -178,7 +178,7 @@ def draw_cell_loc(data_file,CellA, CellB, time, BinDiv=1, bin_i=0, bin_j=0, ImgW
     if BinDiv==1:
         plt.xlim(0,ImgWidth);plt.ylim(ImgWidth,0)
     else:
-        plt.xlim(BinX_Low+1,BinX_High);plt.ylim(BinY_High,BinY_Low+1)
+        plt.xlim(BinX_Low,BinX_High);plt.ylim(BinY_High,BinY_Low+1)
     plt.title('Distribution of '+'Both-Cell'+title_end)
 
     plt.tight_layout()
@@ -189,6 +189,8 @@ class CellDen:
     Parameters:
     -----------
     data: the processed data for densities of types of cell in a dataframe
+    time_scale: time scale between subsequent time steps, in hours
+    length_scale: linear size scale of the image, in mm
 
     Attributes:
     -----------
@@ -201,10 +203,13 @@ class CellDen:
     CellDen.cellname: a tuple of the first and second cell name
     CellDen.bin_num: total bin number
     CellDen.tot_time: total number of time steps of the experiment
+    
+    CellDen.time_scale: time scale between subsequent time steps, in hours
+    CellDen.length_scale: linear size scale of the image, in mm
 
     """
 
-    def __init__(self, data, time_scale=15):
+    def __init__(self, data, time_scale=0.25,length_scale=1.33):
         self.data = data
         
         CellA=list(data.columns.levels)[0][2]
@@ -217,7 +222,7 @@ class CellDen:
         self.tot_time = tot_time
         
         self.time_scale=time_scale
-        
+        self.length_scale=length_scale
         
         
     def pd2np(self):
