@@ -73,5 +73,5 @@ def read(data_file, CellA, CellB, BinDiv, ImgWidth=1024, time_scale=0.25, length
     CellDen.time_scale: time scale between subsequent time steps, in hours
     CellDen.length_scale: linear size scale of the image, in mm
     '''
-    data=celldensity.cell_density(data_file,CellA,CellB,BinDiv,length_scale,ImgWidth)
+    data=celldensity.cell_density(data_file,CellA,CellB,BinDiv,ImgWidth)
     return celldensity.CellDen(data,time_scale,length_scale)
