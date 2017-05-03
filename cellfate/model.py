@@ -1,5 +1,7 @@
 # Numerical solver of the differential equation
-# Reference: http://scipy-cookbook.readthedocs.io/items/CoupledSpringMassSystem.html
+# Reference: 
+# 1. http://scipy-cookbook.readthedocs.io/items/CoupledSpringMassSystem.html
+# 2. http://ipython-books.github.io/featured-05/
 
 import numpy as np
 import seaborn as sns
@@ -10,7 +12,8 @@ import pandas as pd
 
 def pd2np(input_data):
     '''
-    Transforms pandas dataframe of input CellDen object into numpy array
+    Transforms data of input CellDen object ( inpandas Dataframe) into numpy array
+    and returns the numpy array.
     The resulting ndarray will have a form of (3, binDiv, binDiv, time):
     [red, green, both] x (binDiv x binDiv) x(time)
     
@@ -23,16 +26,16 @@ def pd2np(input_data):
 
 def np2pd(input_np, binNum):
     '''
-    Transforms ndarray into pandas dataframe.
+    Transforms ndarray into pandas dataframe and returns the dataframe.
     The resulting pandas dataframe will have following form:
         rows: time
-        columns: Red, Green, Both (in order)
-            subcolumns: indices for bin (starts from 0; 
-                                         in order of left to right and top to bottom)
+        columns (in order): Sox2 (green), Oct4 (red), Both
+            subcolumns: indices for bin (starts from 0; in the order of 
+                                         left to right and top to bottom)
     
     Arguments:
         input_np: ndarray of form (3, binDiv, binDiv, time)
-                  i.e. [red, green, both] x (binDiv x binDiv) x(time)
+                  i.e. [Sox2, Oct4, Both] x (binDiv x binDiv) x(time)
     '''
     # Set up the column structure for dataframe
     cols=pd.MultiIndex.from_tuples([ (x,y) for x in ['Sox2','Oct4','Both'] \
@@ -41,21 +44,21 @@ def np2pd(input_np, binNum):
     return pd.DataFrame(reshaped.T,columns=cols)
 
 
-def diffeq(w, t, p):
+def model_uncoupled(w, t, p):
     """
-    Defines the differential equations for our model.
+    Returns the system of differential equations defining the model without diffusion.
 
     Arguments:
         w :  vector of the state variables:
-                  w = [red, grn, both]
+                 w = [grn, red, both]
         t :  time
         p :  vector of the parameters:
-                  p = [k_ent,k_div,k_dep,k_bg,k_br, k_loss]
+                  p = [k_div,k_bg,k_br]
     """
     grn, red, both = w
     k_div, k_bg, k_br = p
 
-    # Create f = (red,grn,both) - order should be same as in w vector:
+    # Create f = (red,grn,both) - order should be same as in theta vector:
     f = [k_div*grn + k_bg*both,
          k_div*red + k_br*both,
          k_div*both - (k_bg+k_br)*both]
@@ -63,44 +66,50 @@ def diffeq(w, t, p):
     return f
 
   
-def diffeqSolve(params, data, stoptime=20, minStepNum=200):
+def solver_uncoupled(params, data, minStepNum=200):
     '''
-    Solve the system of differential equations in diffeq() function by using
-    input data as initial condition
+    Solve the system of differential equations in model_uncouple function by using
+    input data as initial condition.
+    Returns solution in numpy ndarray in the form of (3, BinDiv, BinDiv, time)
     
     Arguments:
         params: parameter values used for diffeq system
         data: CellDen class object
-        stoptime: total duration for which diffeq is solved
         minStepNum: defines minimum number of timesteps for solving diffeq
     '''
     
     data_matrix = data.pd2np()
     init_cond = data_matrix[:,:,:,0]
+    stepNum = data.tot_time
+    stoptime = data.time_scale*stepNum # total time
+
 
     # Create the time samples for the output of the ODE solver.
-    nfactor = int(minStepNum/data.tot_time)+1
-    numpoints = data.tot_time*nfactor
+    nfactor = int(minStepNum/stepNum)+1
+    numpoints = stepNum*nfactor
 
     t = np.linspace(0, stoptime, numpoints)
     
     # Create a grid to save the solved results
     binDiv = data.bin_num
-    final_grid = np.zeros((3, binDiv , binDiv, data.tot_time))
+    final_grid = np.zeros((3, binDiv , binDiv, stepNum))
     # Solve ODE for each bin
     for i in range(binDiv):
         for j in range(binDiv):
-            wsol = odeint(diffeq, init_cond[:,i,j], t, args=(params,))
+            wsol = odeint(model_uncoupled, init_cond[:,i,j], t, args=(params,))
             final_grid[:,i,j,:] = wsol.T[:,::nfactor]
 
     return final_grid
 
-def log_prior(theta):
+
+def log_prior_uncoupled(theta):
     """
-    returns log of prior probability distribution
+    Returns log of prior probability distribution for the model without diffusion
     
-    Parameters:
+    Arguments:
         theta: model parameters (specified as a list)
+                theta = [k_div, k_bg, k_br]
+        
     """
     # unpack the model parameters
     k_div, k_bg, k_br = theta
@@ -111,7 +120,235 @@ def log_prior(theta):
         return 0.0
     return -np.inf
     
-def log_likelihood(theta, data, sigma_n):
+def log_likelihood_uncoupled(theta, data, mu_n, sigma_n):
+    """
+    Returns log of likelihood function for model without diffusion.
+    
+    Parameters:
+        theta: model parameters (specified as a list)
+                theta = [k_div, k_bg, k_br]
+        data: CellDen class object
+        sigma_n: standard deviation of number counting error
+        mu_n: mean of number counting error
+    """
+    model = solver_uncoupled(theta, data)
+    data_matrix = data.pd2np()
+
+    # Remove the bins in whcih observed number of cells is zero
+    nonzero_args = np.nonzero(data_matrix)
+    data_matrix = data_matrix[nonzero_args]
+    model = model[nonzero_args]
+
+    # Remove the bins in whcih number of cells of the model is zero
+    # These zero points become problems as we take log of them.
+    # While it cannot be rigorously justified, the number of such case is
+    # approximately less than 5%, so we expect contribution of these points
+    # is negligible
+    nonzero_args = np.nonzero(model)
+    data_matrix = data_matrix[nonzero_args]
+    model = model[nonzero_args]
+            
+    residual = (np.log(data_matrix) - np.log(model) - mu_n)**2
+    chi_square = np.sum(residual/(sigma_n**2))
+    constant = np.sum(np.log(1/np.sqrt(2.0*np.pi*sigma_n**2)))*residual.size
+    logsum_data = np.sum(np.log(data_matrix))
+                     
+    return constant - logsum_data - 0.5*chi_square
+
+def log_posterior_uncoupled(theta, data, mu_n, sigma_n):
+    '''
+    Returns log of posterior probability distribution for model without diffusion.
+    
+    Parameters:
+        theta: model parameters (specified as a list)
+                theta = [k_div, k_bg, k_br]
+        data: CellDen class object
+        sigma_n: standard deviation of number counting error
+   '''
+    # If prior is -np.inf, no need to proceed so ends by returning -np.inf
+    lp = log_prior_uncoupled(theta)
+    if not np.isfinite(lp):
+        return -np.inf
+    
+    return lp + log_likelihood_uncoupled(theta, data, mu_n, sigma_n)
+
+def negative_log_posterior_uncoupled(theta, data, mu_n, sigma_n):
+    '''
+    Returns the negative value of log_posterior_uncoupled function.
+    
+    Arguments:
+        theta: model parameters (specified as a list)
+                theta = [k_div, k_bg, k_br]
+        data: CellDen class object
+        sigma_n: standard deviation of number counting error
+    '''
+    return -log_posterior_uncoupled(theta, data, mu_n, sigma_n)
+
+
+def solver_coupled(theta, data, minStepNum=200):
+    '''
+    Solves the system of differential equations for the model with diffusion by
+    using input data as initial condition.
+    It uses finite difference method to solve the system of PDEs.
+    Returns solution in numpy ndarray in the form of (3, BinDiv, BinDiv, time)
+    
+    Arguments:
+        theta: model parameters (specified as a list)
+                theta = [k_div, k_bg, k_br, D]
+        data: CellDen class object
+        minStepNum: defines minimum number of timesteps for solving diffeq
+    '''
+    # Define variables
+    data_matrix = data.pd2np() # data
+    init_cond = data_matrix[:,:,:,0] # initial condition
+    k_div, k_bg, k_br, k_mov = theta # parameters
+    
+    binDiv = data.bin_num # bin number (one side)
+    length = data.length_scale # length of the side of the area (mm)
+    dx = length/binDiv  # space step
+
+    stepNum = data.tot_time    
+    T = data.time_scale*stepNum  # total time
+    dt = T/stepNum # time step
+    
+    dt_cutoff = 0.9 * dx**2/2 # Stability criterion
+    if dt > dt_cutoff:
+        nfactor = int(dt/dt_cutoff)+1
+        stepNum = nfactor*stepNum
+        dt = T/stepNum
+    else:
+        nfactor = 1
+    
+    B = init_cond[2,:,:] # Both cells
+    R = init_cond[1,:,:] # Oct4 (red) cells
+    G = init_cond[0,:,:] # Sox2 (green) cells
+
+    def laplacian(Z):
+        '''
+        Returns laplacian using finite difference method.
+        Note that the edge is removed.
+        
+        Arguments:
+            Z: 2-d numpy array of number density
+        '''
+        Ztop = Z[0:-2,1:-1]
+        Zleft = Z[1:-1,0:-2]
+        Zbottom = Z[2:,1:-1]
+        Zright = Z[1:-1,2:]
+        Zcenter = Z[1:-1,1:-1]
+        return (Ztop + Zleft + Zbottom + Zright - 4 * Zcenter) / dx**2
+
+    # We simulate the PDE with the finite difference method.
+    # Create a grid to save the solution over time
+    final_grid = np.zeros((3, binDiv , binDiv, data.tot_time))
+    final_grid[:,:,:,0] = init_cond
+
+    for i in range(stepNum-1):
+        # We compute the Laplacian of B,R,G.
+        deltaB = laplacian(B)
+        deltaR = laplacian(R)
+        deltaG = laplacian(G)
+        # We take the values of B,R,G inside the grid. Again, edge is removed
+        Bc = B[1:-1,1:-1]
+        Rc = R[1:-1,1:-1]
+        Gc = G[1:-1,1:-1]
+        # We update the variables.
+        B[1:-1,1:-1] = Bc + dt * (k_mov * deltaB + k_div*Bc - (k_bg+k_br)*Bc)
+        R[1:-1,1:-1] = Rc + dt * (k_mov * deltaR + k_div*Rc + k_br*Bc)
+        G[1:-1,1:-1] = Gc + dt * (k_mov * deltaG + k_div*Gc + k_bg*Bc)
+            
+        # Neumann conditions: derivatives at the edges are null
+        for Z in [B, R, G]:
+            Z[0,:] = Z[1,:]
+            Z[-1,:] = Z[-2,:]
+            Z[:,0] = Z[:,1]
+            Z[:,-1] = Z[:,-2]
+        
+        # Save the result at this step
+        # If nfactor > 1, save the result at every nfactor-th step
+        if ((i+1)%nfactor)==0:
+            index = int((i+1)/nfactor)
+            final_grid[0,:,:,index] = G
+            final_grid[1,:,:,index] = R
+            final_grid[2,:,:,index] = B
+    
+    return final_grid
+
+
+def log_prior_coupled(theta):
+    '''
+    Returns log of prior probability distribution for the model with diffusion.
+    
+    Arguments:
+        theta: model parameters (specified as a list)
+                theta = [k_div, k_bg, k_br, k_mov]        
+    '''
+    # unpack the model parameters
+    k_div, k_bg, k_br, k_mov = theta
+  
+    # We can ignore normalization factor since it is constant.
+    # So we simply return 0 for parameters in the specified range.
+    if 0 <= k_div <= 1 and 0 <= k_bg <= 1 and 0 <= k_br <= 1 and 0 <= k_mov <= 1:
+        return 0.0
+    return -np.inf
+    
+def log_likelihood_coupled(theta, data, mu_n, sigma_n):
+    '''
+    Returns log of likelihood function for model with diffusion.
+    
+    Arguments:
+        theta: model parameters (specified as a list)
+                theta = [k_div, k_bg, k_br, k_mov]
+        data: CellDen class object
+        sigma_n: standard deviation of number counting error
+        mu_n: mean of number counting error
+    '''
+    model = solver_coupled(theta, data)[:,1:-1,1:-1,:]
+    data_matrix = data.pd2np()[:,1:-1,1:-1,:]
+    
+    # Remove the bins in whcih observed number of cells is zero
+    nonzero_args = np.nonzero(data_matrix)
+    data_matrix = data_matrix[nonzero_args]
+    model = model[nonzero_args]
+        
+    residual = (np.log(data_matrix) - np.log(model) - mu_n)**2
+    chi_square = np.sum(residual/(sigma_n**2))
+    constant = np.sum(np.log(1/np.sqrt(2.0*np.pi*sigma_n**2)))*residual.size
+    logsum_data = np.sum(np.log(data_matrix))
+                     
+    return constant - logsum_data - 0.5*chi_square
+
+def log_posterior_coupled(theta, data, mu_n, sigma_n):
+    '''
+    Returns log of posterior function for model with diffusion.
+    
+    Arguments:
+        theta: model parameters (specified as a list)
+                theta = [k_div, k_bg, k_br, k_mov]
+        data: CellDen class object
+        sigma_n: standard deviation of number counting error
+    '''
+    # If prior is -np.inf, no need to proceed so ends by returning -np.inf
+    lp = log_prior_coupled(theta)
+    if not np.isfinite(lp):
+        return -np.inf
+    
+    return lp + log_likelihood_coupled(theta, data, mu_n, sigma_n)
+
+def negative_log_posterior_coupled(theta, data, mu_n, sigma_n):
+    '''
+    Returns negative value of log_posterior_coupled function.
+    
+    Arguments:
+        theta: model parameters (specified as a list)
+                theta = [k_div, k_bg, k_br, k_mov]
+        data: CellDen class object
+        sigma_n: standard deviation of number counting error
+    '''
+    return -log_posterior_coupled(theta, data, mu_n, sigma_n)
+
+####################
+def log_likelihood_gaussian(theta, data, sigma_n):
     """
     returns log of likelihood
     
@@ -120,15 +357,15 @@ def log_likelihood(theta, data, sigma_n):
         data: CellDen class object
         sigma_n: uncertainties on measured number density
     """
-    model = diffeqSolve(theta, data)
-    data_matrix = data.pd2np()
+    model = solver_coupled(theta, data)[:,1:-1,1:-1,:]
+    data_matrix = data.pd2np()[:,1:-1,1:-1,:]
     residual = (data_matrix - model)**2
     chi_square = np.sum(residual/(sigma_n**2))
     constant = np.sum(np.log(1/np.sqrt(2.0*np.pi*sigma_n**2)))*residual.size
                      #Need modification if sigma_n is an array
     return constant - 0.5*chi_square
 
-def log_posterior(theta, data, sigma_n):
+def log_posterior_gaussian(theta, data, sigma_n):
     """
     returns log of posterior probability distribution
     
@@ -138,13 +375,13 @@ def log_posterior(theta, data, sigma_n):
         sigma_n: uncertainties on measured number density
     """
     # If prior is -np.inf, no need to proceed so ends by returning -np.inf
-    lp = log_prior(theta)
+    lp = log_prior_coupled(theta)
     if not np.isfinite(lp):
         return -np.inf
     
-    return lp + log_likelihood(theta, data, sigma_n)
+    return lp + log_likelihood_gaussian(theta, data, sigma_n)
 
-def negative_log_posterior(theta, data, sigma_n):
+def negative_log_posterior_gaussian(theta, data, sigma_n):
     """
     returns the negative log of posterior probability distribution
     
@@ -153,7 +390,13 @@ def negative_log_posterior(theta, data, sigma_n):
         data: CellDen class object
         sigma_n: uncertainties on measured number density
     """
-    return -log_posterior(theta, data, sigma_n)
+    return -log_posterior_gaussian(theta, data, sigma_n)
+
+
+
+#####################
+
+
 
     
 def plotMap(grid, duration, plotNum=10):
@@ -169,21 +412,21 @@ def plotMap(grid, duration, plotNum=10):
     '''
     # Define time step
     time_step = int(duration/plotNum)
-    red = grid[0,:,:]
-    grn = grid[1,:,:]
+    grn = grid[0,:,:]
+    red = grid[1,:,:]
     both = grid[2,:,:]
     # Plot heatmap for each time i*time_step
     for i in range(plotNum):
         plt.subplot(plotNum,3,1+i*3)
-        sns.heatmap(both[:,:,i*time_step], vmin=0, vmax=30,
+        sns.heatmap(both[:,:,i*time_step], vmin=0, vmax=150,
                     annot=True, fmt='.1f', cmap="Oranges")
         
         plt.subplot(plotNum,3,2+i*3)
-        sns.heatmap(red[:,:,i*time_step], vmin=0, vmax=30,
+        sns.heatmap(red[:,:,i*time_step], vmin=0, vmax=150,
                     annot=True, fmt='.1f', cmap="Reds")
     
         plt.subplot(plotNum,3,3+i*3)
-        sns.heatmap(grn[:,:,i*time_step], vmin=0, vmax=30,
+        sns.heatmap(grn[:,:,i*time_step], vmin=0, vmax=150,
                     annot=True, fmt='.1f', cmap="Greens")
 #    plt.tight_layout()
 

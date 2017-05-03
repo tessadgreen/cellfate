@@ -29,7 +29,7 @@ class Test(TestCase):
         nbins=6
         testdat=io.read('io-test.csv','Sox2','Oct4',nbins)
         test_params=[0.05, 0.6, 0.1]
-        testdat_solved = model.diffeqSolve(test_params, testdat)
+        testdat_solved = model.solver_uncoupled(test_params, testdat)
         assert np.shape(testdat_solved)==(3,nbins,nbins,3)
     
     def test_model(self):
@@ -37,8 +37,9 @@ class Test(TestCase):
         test_params=[0.03,0.1,0.7]
         nbins=4
         testdat=io.read('io-test.csv','Sox2','Oct4',nbins)
-        sigma_n=0.2
-        val=model.log_likelihood(test_params, testdat, sigma_n)
+        mu_n = -0.15
+        sigma_n=0.1
+        val=model.log_likelihood_uncoupled(test_params, testdat, mu_n, sigma_n)
         assert isinstance(val,float)
 
     def test_model_regress(self):
@@ -53,10 +54,10 @@ class Test(TestCase):
 
         # Calculate log_likelihood function
         # sigma_n is set arbitrarily as 0.4
-        val_1 = model.log_likelihood(params1, testdat, 0.4)
-        val_2 = model.log_likelihood(params2, testdat, 0.4)
+        val_1 = model.log_likelihood_uncoupled(params1, testdat, -0.15, 0.1)
+        val_2 = model.log_likelihood_uncoupled(params2, testdat, -0.15, 0.1)
 
-        self.assertTrue(val_2 < val_1)
+        self.assertTrue(val_2 > val_1)
 
     def test_inference(self):
         """ Tests that inference on simulated data returns accurate params """
@@ -68,7 +69,7 @@ class Test(TestCase):
         #test data generated using k=[0.018, 0.001, 0.002]
 
         k0=[0.02,0.005,0.001]
-        res = op.fmin(model.negative_log_posterior, k0, args=(data, 1000))
+        res = op.fmin(model.negative_log_posterior_uncoupled, k0, args=(data, -0.15, 0.1))
         np.testing.assert_almost_equal(res,k0,2)
 
 

@@ -59,7 +59,7 @@ def cell_density(data_file, CellA, CellB, BinDiv, length_scale, ImgWidth):
             BinX_Low=BinWidth*j
             BinX_High=BinWidth*(j+1)
 
-            BinArea=((length_scale/ImgWidth)*BinWidth)**2
+            BinArea=1
             Both_Bin_Den=len(Both_X[(Both_X>=BinX_Low)*(Both_X<BinX_High)*(Both_Y>=BinY_Low)*(Both_Y<BinY_High)])/BinArea
             CellA_Bin_Den=len(CellA_X[(CellA_X>=BinX_Low)*(CellA_X<BinX_High)*(CellA_Y>=BinY_Low)*(CellA_Y<BinY_High)])/BinArea
             CellB_Bin_Den=len(CellB_X[(CellB_X>=BinX_Low)*(CellB_X<BinX_High)*(CellB_Y>=BinY_Low)*(CellB_Y<BinY_High)])/BinArea
@@ -235,7 +235,9 @@ class CellDen:
         Arguments:
             input_data: CellDen class object
         '''
-        return np.reshape(self.data.as_matrix().T, (3,self.bin_num, self.bin_num, -1))
+        data_matrix = np.array(np.reshape(self.data.as_matrix().T, 
+                                          (3,self.bin_num, self.bin_num, -1)))
+        return data_matrix
 
 
     def plotMap(self, plotNum=3):
@@ -252,9 +254,9 @@ class CellDen:
         grid = self.pd2np()
         # Define time step
         time_step = int(self.tot_time/plotNum)
-        grn = grid[0,:,:]
-        red = grid[1,:,:]
-        both = grid[2,:,:]
+        grn = grid[0,:,:,:]
+        red = grid[1,:,:,:]
+        both = grid[2,:,:,:]
         # Plot heatmap for each time i*time_step
         for i in range(plotNum):
             plt.subplot(plotNum,3,1+i*3)
