@@ -71,7 +71,3 @@ class Test(TestCase):
         k0=[0.02,0.005,0.001]
         res = op.fmin(model.negative_log_posterior_uncoupled, k0, args=(data, -0.15, 0.1))
         np.testing.assert_almost_equal(res,k0,2)
-
-
-        #sampler=model.k_sampler(data, 1000, res, 1e-4)
-        #samples = sampler.chain[:,300:,:]
