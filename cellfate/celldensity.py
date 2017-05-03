@@ -6,7 +6,7 @@ from cellfate import io
 
 #Find the density of different types of cells at different times and bins
 
-def cell_density(data_file, CellA, CellB, BinDiv, length_scale, ImgWidth):
+def cell_density(data_file, CellA, CellB, BinDiv, ImgWidth):
     '''
     Parameters:
     -----------
@@ -26,7 +26,6 @@ def cell_density(data_file, CellA, CellB, BinDiv, length_scale, ImgWidth):
     CellA: Name of the first cell type, e.g.'Sox2'
     CellB: Name of the second cell type, e.g. 'Oct4'
     BinDiv: An integer telling the function to divide the orginal cell image into BinDiv x BinDiv bins
-    length_scale: length_scale: linear size scale of the image, in mm
     ImgWidth: the linear size of the image in pixels (e.g. for an image of 1024x1024, just enter 1024)
 
     return:
@@ -59,7 +58,7 @@ def cell_density(data_file, CellA, CellB, BinDiv, length_scale, ImgWidth):
             BinX_Low=BinWidth*j
             BinX_High=BinWidth*(j+1)
 
-            BinArea=1
+            BinArea=1 #treat as unit area, otherwise can use ((length_scale/ImgWidth)*BinWidth)**2
             Both_Bin_Den=len(Both_X[(Both_X>=BinX_Low)*(Both_X<BinX_High)*(Both_Y>=BinY_Low)*(Both_Y<BinY_High)])/BinArea
             CellA_Bin_Den=len(CellA_X[(CellA_X>=BinX_Low)*(CellA_X<BinX_High)*(CellA_Y>=BinY_Low)*(CellA_Y<BinY_High)])/BinArea
             CellB_Bin_Den=len(CellB_X[(CellB_X>=BinX_Low)*(CellB_X<BinX_High)*(CellB_Y>=BinY_Low)*(CellB_Y<BinY_High)])/BinArea
@@ -163,7 +162,7 @@ def draw_cell_loc(data_file,CellA, CellB, time, BinDiv=1, bin_i=0, bin_j=0, ImgW
     if BinDiv==1:
         plt.xlim(0,ImgWidth);plt.ylim(ImgWidth,0)
     else:
-        plt.xlim(BinX_Low+1,BinX_High);plt.ylim(BinY_High,BinY_Low+1)
+        plt.xlim(BinX_Low,BinX_High);plt.ylim(BinY_High,BinY_Low+1)
     plt.title('Distribution of '+CellA+title_end)
 
     plt.subplot(1,3,2,aspect='equal')
@@ -171,7 +170,7 @@ def draw_cell_loc(data_file,CellA, CellB, time, BinDiv=1, bin_i=0, bin_j=0, ImgW
     if BinDiv==1:
         plt.xlim(0,ImgWidth);plt.ylim(ImgWidth,0)
     else:
-        plt.xlim(BinX_Low+1,BinX_High);plt.ylim(BinY_High,BinY_Low+1)
+        plt.xlim(BinX_Low,BinX_High);plt.ylim(BinY_High,BinY_Low+1)
     plt.title('Distribution of '+CellB+title_end)
 
     plt.subplot(1,3,3,aspect='equal')
@@ -179,7 +178,7 @@ def draw_cell_loc(data_file,CellA, CellB, time, BinDiv=1, bin_i=0, bin_j=0, ImgW
     if BinDiv==1:
         plt.xlim(0,ImgWidth);plt.ylim(ImgWidth,0)
     else:
-        plt.xlim(BinX_Low+1,BinX_High);plt.ylim(BinY_High,BinY_Low+1)
+        plt.xlim(BinX_Low,BinX_High);plt.ylim(BinY_High,BinY_Low+1)
     plt.title('Distribution of '+'Both-Cell'+title_end)
 
     plt.tight_layout()
