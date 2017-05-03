@@ -347,58 +347,7 @@ def negative_log_posterior_coupled(theta, data, mu_n, sigma_n):
     '''
     return -log_posterior_coupled(theta, data, mu_n, sigma_n)
 
-####################
-def log_likelihood_gaussian(theta, data, sigma_n):
-    """
-    returns log of likelihood
-    
-    Parameters:
-        theta: model parameters (specified as a list)
-        data: CellDen class object
-        sigma_n: uncertainties on measured number density
-    """
-    model = solver_coupled(theta, data)[:,1:-1,1:-1,:]
-    data_matrix = data.pd2np()[:,1:-1,1:-1,:]
-    residual = (data_matrix - model)**2
-    chi_square = np.sum(residual/(sigma_n**2))
-    constant = np.sum(np.log(1/np.sqrt(2.0*np.pi*sigma_n**2)))*residual.size
-                     #Need modification if sigma_n is an array
-    return constant - 0.5*chi_square
 
-def log_posterior_gaussian(theta, data, sigma_n):
-    """
-    returns log of posterior probability distribution
-    
-    Parameters:
-        theta: model parameters (specified as a list)
-        data: CellDen class object
-        sigma_n: uncertainties on measured number density
-    """
-    # If prior is -np.inf, no need to proceed so ends by returning -np.inf
-    lp = log_prior_coupled(theta)
-    if not np.isfinite(lp):
-        return -np.inf
-    
-    return lp + log_likelihood_gaussian(theta, data, sigma_n)
-
-def negative_log_posterior_gaussian(theta, data, sigma_n):
-    """
-    returns the negative log of posterior probability distribution
-    
-    Parameters:
-        theta: model parameters (specified as a list)
-        data: CellDen class object
-        sigma_n: uncertainties on measured number density
-    """
-    return -log_posterior_gaussian(theta, data, sigma_n)
-
-
-
-#####################
-
-
-
-    
 def plotMap(grid, duration, plotNum=10):
     '''
     Plot the heatmap of each type of cell over time
@@ -429,27 +378,3 @@ def plotMap(grid, duration, plotNum=10):
         sns.heatmap(grn[:,:,i*time_step], vmin=0, vmax=150,
                     annot=True, fmt='.1f', cmap="Greens")
 #    plt.tight_layout()
-
-
-def k_sampler(data, sigma_n, init_params, spread, nwalkers = 20, nsteps = 500):
-    ndim = 3
-    '''
-    Use an affine invariant sampler to find the MAP k parameters
-    
-    Arguments:
-        data: data to which parameters are to be fit
-        sigma_n: uncertainties on measured number density
-        init_params: initial guesses for k parameters
-        spread: a scalar describing the width of the gaussian ball around which 
-                the walkers will be started
-        nwalkers: the number of walkers in the sampler
-        nsteps: the number of steps run by the sampler
-    '''
-    # Starting positions in Gaussian ball
-    starting_positions = [init_params + spread*np.random.randn(ndim)\
-                      for i in range(nwalkers)]
-    # Set up the sampler object
-    sampler = emcee.EnsembleSampler(nwalkers, ndim, log_posterior, \
-                                    args=(data, sigma_n))
-    sampler.run_mcmc(starting_positions, nsteps)
-    return sampler
