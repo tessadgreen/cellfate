@@ -234,7 +234,9 @@ class CellDen:
         Arguments:
             input_data: CellDen class object
         '''
-        return np.reshape(self.data.as_matrix().T, (3,self.bin_num, self.bin_num, -1))
+        data_matrix = np.array(np.reshape(self.data.as_matrix().T, 
+                                          (3,self.bin_num, self.bin_num, -1)))
+        return data_matrix
 
 
     def plotMap(self, plotNum=3):
@@ -251,9 +253,9 @@ class CellDen:
         grid = self.pd2np()
         # Define time step
         time_step = int(self.tot_time/plotNum)
-        grn = grid[0,:,:]
-        red = grid[1,:,:]
-        both = grid[2,:,:]
+        grn = grid[0,:,:,:]
+        red = grid[1,:,:,:]
+        both = grid[2,:,:,:]
         # Plot heatmap for each time i*time_step
         for i in range(plotNum):
             plt.subplot(plotNum,3,1+i*3)

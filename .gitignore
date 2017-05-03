@@ -90,3 +90,5 @@ ENV/
 
 #big data file
 full-data.csv
+
+cellfate/test/expt128_1-88SoxNuclei.csv
