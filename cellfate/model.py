@@ -44,14 +44,15 @@ def np2pd(input_np, binNum):
     return pd.DataFrame(reshaped.T,columns=cols)
 
   
-def solver_uncoupled(params, data, minStepNum=200):
+def solver_uncoupled(theta, data, minStepNum=200):
     '''
     Solve the system of differential equations in model_uncouple function by using
     input data as initial condition.
     Returns solution in numpy ndarray in the form of (3, BinDiv, BinDiv, time)
     
     Arguments:
-        params: parameter values used for diffeq system
+        theta: parameter values used for diffeq system
+               theta = [k_div,k_bg,k_br]
         data: CellDen class object
         minStepNum: defines minimum number of timesteps for solving diffeq
     '''
@@ -94,7 +95,7 @@ def solver_uncoupled(params, data, minStepNum=200):
     # Solve ODE for each bin
     for i in range(binDiv):
         for j in range(binDiv):
-            wsol = odeint(model_uncoupled, init_cond[:,i,j], t, args=(params,))
+            wsol = odeint(model_uncoupled, init_cond[:,i,j], t, args=(theta,))
             final_grid[:,i,j,:] = wsol.T[:,::nfactor]
 
     return final_grid
@@ -129,8 +130,8 @@ def log_likelihood_uncoupled(theta, data, mu_n, sigma_n):
         mu_n: mean of the log distribution of counting error
         sigma_n: standard deviation of the log distribution of counting error    
     """
-    model = solver_uncoupled(theta, data)
-    data_matrix = data.pd2np()
+    model = solver_uncoupled(theta, data)[:,1:-1,1:-1,:]
+    data_matrix = data.pd2np()[:,1:-1,1:-1,:]
 
     # Remove the bins in whcih observed number of cells is zero
     nonzero_args = np.nonzero(data_matrix)
@@ -194,7 +195,7 @@ def solver_coupled(theta, data, minStepNum=200):
     
     Arguments:
         theta: model parameters (specified as a list)
-                theta = [k_div, k_bg, k_br, D]
+                theta = [k_div, k_bg, k_br, k_mov]
         data: CellDen class object
         minStepNum: defines minimum number of timesteps for solving diffeq
     '''
@@ -377,8 +378,8 @@ def residual(theta, data, mu_n, sigma_n, coupled):
         y = y[nonzero_args]
         m = m[nonzero_args]
     else:
-        y = data.pd2np()
-        m = solver_uncoupled(theta, data)
+        y = data.pd2np()[:,1:-1,1:-1,:]
+        m = solver_uncoupled(theta, data)[:,1:-1,1:-1,:]
 
         # Remove the bins in whcih observed number of cells is zero
         nonzero_args = np.nonzero(y)

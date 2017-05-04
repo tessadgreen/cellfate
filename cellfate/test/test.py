@@ -2,11 +2,7 @@ from unittest import TestCase
 import numpy as np
 import pandas as pd
 import cellfate
-from cellfate import io
-from cellfate import model 
-from cellfate import celldensity
-import pickle as pkl
-from cellfate import model
+from cellfate import io, model, celldensity
 import scipy.optimize as op
 
 
