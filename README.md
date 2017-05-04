@@ -22,7 +22,7 @@ Cells should have fluorescently tagged transcription factors that provide real-t
 
 - model.py: contains the functions to solve ODE for our model and to calculate likelihood function
 
-- test_data.npz: a sample dataset to create the following two simulated data
+- Simulated data
     1) sample.pkl: simulated data (2x2 bins) in the form of pandas dataframe. The parameters used to create this dataset is [k_div, k_bg, k_br]=[0.05, 0.6, 0.1]
     2) sample_4x4.pkl: simulated data (4x4 bins) in the form of pandas dataframe. The parameters used to create this dataset is [k_div, k_bg, k_br]=[0.1, 0.4, 0.2]
     3) sample_2x2_30.pkl: simulated data (2x2 bins) in the form of pandas dataframe for unit timestep of 30. The parameters used to create this dataset is [k_div, k_bg, k_br]=[0.1, 0.4, 0.2]  
