@@ -1,6 +1,5 @@
 import os
 from cellfate import celldensity
-import numpy as np
 import pandas as pd
 
 def get_data_file_path(filename, data_dir='test'):
