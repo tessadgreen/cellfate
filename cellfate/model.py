@@ -43,28 +43,6 @@ def np2pd(input_np, binNum):
     reshaped = np.reshape(input_np, (3*binNum**2, -1))
     return pd.DataFrame(reshaped.T,columns=cols)
 
-
-def model_uncoupled(w, t, p):
-    """
-    Returns the system of differential equations defining the model without diffusion.
-
-    Arguments:
-        w :  vector of the state variables:
-                 w = [grn, red, both]
-        t :  time
-        p :  vector of the parameters:
-                  p = [k_div,k_bg,k_br]
-    """
-    grn, red, both = w
-    k_div, k_bg, k_br = p
-
-    # Create f = (red,grn,both) - order should be same as in theta vector:
-    f = [k_div*grn + k_bg*both,
-         k_div*red + k_br*both,
-         k_div*both - (k_bg+k_br)*both]
-
-    return f
-
   
 def solver_uncoupled(params, data, minStepNum=200):
     '''
@@ -82,7 +60,27 @@ def solver_uncoupled(params, data, minStepNum=200):
     init_cond = data_matrix[:,:,:,0]
     stepNum = data.tot_time
     stoptime = data.time_scale*stepNum # total time
-
+    
+    def model_uncoupled(w, t, p):
+        """
+        Returns the system of differential equations defining the model without diffusion.
+    
+        Arguments:
+            w :  vector of the state variables:
+                     w = [grn, red, both]
+            t :  time
+            p :  vector of the parameters:
+                      p = [k_div,k_bg,k_br]
+        """
+        grn, red, both = w
+        k_div, k_bg, k_br = p
+    
+        # Create f = (red,grn,both) - order should be same as in theta vector:
+        f = [k_div*grn + k_bg*both,
+             k_div*red + k_br*both,
+             k_div*both - (k_bg+k_br)*both]
+    
+        return f
 
     # Create the time samples for the output of the ODE solver.
     nfactor = int(minStepNum/stepNum)+1
@@ -128,8 +126,8 @@ def log_likelihood_uncoupled(theta, data, mu_n, sigma_n):
         theta: model parameters (specified as a list)
                 theta = [k_div, k_bg, k_br]
         data: CellDen class object
-        sigma_n: standard deviation of number counting error
-        mu_n: mean of number counting error
+        mu_n: mean of the log distribution of counting error
+        sigma_n: standard deviation of the log distribution of counting error    
     """
     model = solver_uncoupled(theta, data)
     data_matrix = data.pd2np()
@@ -163,7 +161,8 @@ def log_posterior_uncoupled(theta, data, mu_n, sigma_n):
         theta: model parameters (specified as a list)
                 theta = [k_div, k_bg, k_br]
         data: CellDen class object
-        sigma_n: standard deviation of number counting error
+        mu_n: mean of the log distribution of counting error
+        sigma_n: standard deviation of the log distribution of counting error    
    '''
     # If prior is -np.inf, no need to proceed so ends by returning -np.inf
     lp = log_prior_uncoupled(theta)
@@ -180,7 +179,8 @@ def negative_log_posterior_uncoupled(theta, data, mu_n, sigma_n):
         theta: model parameters (specified as a list)
                 theta = [k_div, k_bg, k_br]
         data: CellDen class object
-        sigma_n: standard deviation of number counting error
+        mu_n: mean of the log distribution of counting error
+        sigma_n: standard deviation of the log distribution of counting error    
     '''
     return -log_posterior_uncoupled(theta, data, mu_n, sigma_n)
 
@@ -300,8 +300,8 @@ def log_likelihood_coupled(theta, data, mu_n, sigma_n):
         theta: model parameters (specified as a list)
                 theta = [k_div, k_bg, k_br, k_mov]
         data: CellDen class object
-        sigma_n: standard deviation of number counting error
-        mu_n: mean of number counting error
+        mu_n: mean of the log distribution of counting error
+        sigma_n: standard deviation of the log distribution of counting error    
     '''
     model = solver_coupled(theta, data)[:,1:-1,1:-1,:]
     data_matrix = data.pd2np()[:,1:-1,1:-1,:]
@@ -326,7 +326,8 @@ def log_posterior_coupled(theta, data, mu_n, sigma_n):
         theta: model parameters (specified as a list)
                 theta = [k_div, k_bg, k_br, k_mov]
         data: CellDen class object
-        sigma_n: standard deviation of number counting error
+        mu_n: mean of the log distribution of counting error
+        sigma_n: standard deviation of the log distribution of counting error
     '''
     # If prior is -np.inf, no need to proceed so ends by returning -np.inf
     lp = log_prior_coupled(theta)
@@ -343,10 +344,103 @@ def negative_log_posterior_coupled(theta, data, mu_n, sigma_n):
         theta: model parameters (specified as a list)
                 theta = [k_div, k_bg, k_br, k_mov]
         data: CellDen class object
-        sigma_n: standard deviation of number counting error
+        mu_n: mean of the log distribution of counting error
+        sigma_n: standard deviation of the log distribution of counting error
     '''
     return -log_posterior_coupled(theta, data, mu_n, sigma_n)
 
+def residual(theta, data, mu_n, sigma_n, coupled):
+    
+    '''
+    Returns the residual from the likelihood function.
+    Note that it is not same as the usual residual from the linear regression
+    as the likelihood function depends on log-normal distribution.
+    
+    Argument:
+        theta: model parameters (specified as a list)
+               If coupled == True, theta = [k_div, k_bg, k_br, k_mov]
+               If coupled == False, theta = [k_div, k_bg, k_br]
+        data: CellDen class object
+        mu_n: mean of the log distribution of counting error
+        sigma_n: standard deviation of the log distribution of counting error
+        coupled: True if one uses model with diffusion &
+                Fals if one uses model without diffusion
+    
+    '''
+    
+    if coupled:
+        y = data.pd2np()[:,1:-1,1:-1,:]
+        m = solver_coupled(theta, data)[:,1:-1,1:-1,:]
+
+        # Remove the bins in whcih observed number of cells is zero
+        nonzero_args = np.nonzero(y)
+        y = y[nonzero_args]
+        m = m[nonzero_args]
+    else:
+        y = data.pd2np()
+        m = solver_uncoupled(theta, data)
+
+        # Remove the bins in whcih observed number of cells is zero
+        nonzero_args = np.nonzero(y)
+        y = y[nonzero_args]
+        m = m[nonzero_args]
+
+        # Remove the bins in whcih number of cells of the model is zero
+        # These zero points become problems as we take log of them.
+        # While it cannot be rigorously justified, the number of such case is
+        # approximately less than 5%, so we expect contribution of these points
+        # is negligible
+        nonzero_args = np.nonzero(m)
+        y = y[nonzero_args]
+        m = m[nonzero_args]
+        
+    return (np.log(y) - np.log(m) - mu_n)/sigma_n
+
+def run_mcmc(data, init_params, coupled, nwalkers=20, nsteps=500, spread=None,
+             mu_n=-0.15, sigma_n=0.1, threadsNum=4):
+    '''
+    Runs MCMC using  Affine Invariant Markov chain Monte Carlo (MCMC) Ensemble 
+    sampler from emcee package.
+    Returns the sampler object after MCMC run.
+    
+    Arguments:
+        data: CellDen class object
+        init_params: Initial position to start MCMC
+        coupled: True if one uses model with diffusion &
+                Fals if one uses model without diffusion
+        nwalkers: number of walkers for MCMC (optional)
+        nsteps: number of steps for MCMC (optional)
+        spread: parameter that spreads the starting position for MCMC (optional)
+                It will be multiplied to the n-dimensional Gausssian ball to
+                vary the starting position for each walker
+        mu_n: mean of the log distribution of counting error (optional)
+        sigma_n: standard deviation of the log distribution of counting error (optional)
+        threadsNum: number of threads to be used for MCMC run (optional)
+    '''
+    if coupled:
+        ndim = 4
+    else:
+        ndim = 3
+        
+    if spread==None:
+        spread = 10**(np.floor(np.log10(init_params))-4)
+    
+    # Starting positions in Gaussian ball
+    starting_positions = [init_params + spread*np.random.randn(ndim) \
+                          for i in range(nwalkers)]
+    
+
+    # Set up the sampler object
+    if coupled:
+        sampler = emcee.EnsembleSampler(nwalkers, ndim, log_posterior_coupled, 
+                                    args=(data, mu_n, sigma_n), threads=threadsNum)
+    else:
+        sampler = emcee.EnsembleSampler(nwalkers, ndim, log_posterior_uncoupled, 
+                                    args=(data, mu_n, sigma_n), threads=threadsNum)    
+    # Run the sampler.
+    sampler.run_mcmc(starting_positions, nsteps)
+    
+    return sampler    
 
 def plotMap(grid, duration, plotNum=10):
     '''
