@@ -1,5 +1,4 @@
 import os
-import scipy.io as sio
 from cellfate import celldensity
 import numpy as np
 import pandas as pd
