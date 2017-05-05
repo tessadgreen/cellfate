@@ -8,7 +8,11 @@ Cells should have fluorescently tagged transcription factors that provide real-t
 
 ## Files:
 
+- Tutorial.ipynb: a jupyter notebook containing instructions to use the package.
+
 - model.ipynb: a jupyter notebook showing the mathematical details of the differential equation used to model the denisty of different cell types at different time t.
+
+- Inference.ipynb: a jupyter notebook containing supplementary materials - inference calculation and analysis - for the final project.
 
 - celldensity.py: contains 
     1) the function to calculate densities of different types of cells in different bins at different times.
@@ -20,12 +24,13 @@ Cells should have fluorescently tagged transcription factors that provide real-t
 
 - io.py: contains the functions to load the .csv file containing the data with the cell location information and it will output an object containing the data of cell density descibed in 'celldensity.py'.
 
-- model.py: contains the functions to solve ODE for our model and to calculate likelihood function
+- model.py: contains the functions to solve for our models and to perform inference by using emcee MCMC package.
 
-- Simulated data
-    1) sample.pkl: simulated data (2x2 bins) in the form of pandas dataframe. The parameters used to create this dataset is [k_div, k_bg, k_br]=[0.05, 0.6, 0.1]
-    2) sample_4x4.pkl: simulated data (4x4 bins) in the form of pandas dataframe. The parameters used to create this dataset is [k_div, k_bg, k_br]=[0.1, 0.4, 0.2]
-    3) sample_2x2_30.pkl: simulated data (2x2 bins) in the form of pandas dataframe for unit timestep of 30. The parameters used to create this dataset is [k_div, k_bg, k_br]=[0.1, 0.4, 0.2]  
+- Simulated data: simulated data file for test purpose. They are in .pkl extension which could be read by pandas DataFrame.read_pickle() function.
+    1) simulated_data.pkl
+    2) simulated_uncoupled_6x6.pkl
+    3) simulated_coupled_6x6.pkl
+    
 
 ## License:
 
